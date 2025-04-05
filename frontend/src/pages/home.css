@@ -1,0 +1,153 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 250px;
+  background-color: #ffffff;
+  border-right: 1px solid #e0e0e0;
+  padding: 1.5rem;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.sidebar.minimized {
+  width: 80px;
+  padding: 1.5rem 0.5rem;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.toggle-btn {
+  background-color: #f0f9ff;
+  border: 1px solid #e0e0e0;
+  color: #228be6;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  width: 32px;
+  height: 32px;
+}
+
+.toggle-btn:hover {
+  background-color: #228be6;
+  color: white;
+}
+
+.toggle-btn i {
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-header h2 {
+  color: #1a1a1a;
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.nav-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #4a4a4a;
+  white-space: nowrap;
+}
+
+.nav-item i {
+  margin-right: 0.75rem;
+  width: 20px;
+  text-align: center;
+}
+
+.minimized .nav-item {
+  padding: 0.75rem;
+  justify-content: center;
+}
+
+.minimized .nav-item i {
+  margin-right: 0;
+}
+
+.nav-item:hover {
+  background-color: #f0f9ff;
+  color: #228be6;
+}
+
+.nav-item.active {
+  background-color: #e7f5ff;
+  color: #228be6;
+  font-weight: 500;
+}
+
+.main-wrapper {
+  flex: 1;
+  background: linear-gradient(135deg, #f0f9ff 0%, #a5d8ff 100%);
+  padding: 2rem;
+}
+
+.home-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f0f9ff 0%, #a5d8ff 100%);
+  padding: 2rem;
+}
+
+.home-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 0 1rem;
+}
+
+.home-header h1 {
+  font-size: 2.5rem;
+  color: #1a1a1a;
+  font-weight: 600;
+  margin: 0;
+}
+
+.add-project-btn {
+  background-color: #228be6;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.add-project-btn:hover {
+  background-color: #1c7ed6;
+}
+
+.main-content {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+} 
