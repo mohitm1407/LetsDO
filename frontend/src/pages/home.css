@@ -1,6 +1,7 @@
 .layout {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .sidebar {
@@ -106,6 +107,9 @@
   flex: 1;
   background: linear-gradient(135deg, #f0f9ff 0%, #a5d8ff 100%);
   padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .home-container {
@@ -120,6 +124,7 @@
   align-items: center;
   margin-bottom: 2rem;
   padding: 0 1rem;
+  flex-shrink: 0;
 }
 
 .home-header h1 {
@@ -150,4 +155,8 @@
   border-radius: 12px;
   padding: 2rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  display: inline-block;
+  min-height: auto;
+  width: 100%;
 } 

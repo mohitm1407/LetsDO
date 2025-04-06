@@ -21,14 +21,12 @@ class AddProjectView(APIView):
     def post(self, request) -> Response:
         try:
             # Validate request data using Pydantic model
-            print(request.data)
             try:
                 project_data = CreateProjectSchema.model_validate(request.data)
             except ValidationError as e:
                 return Response(
                     {"error": "Invalid request data", "details": e.errors()}, status=status.HTTP_400_BAD_REQUEST
                 )
-            print(project_data)
             project = Project.create(
                 display_name=project_data.title,
                 description=project_data.description,

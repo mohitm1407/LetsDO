@@ -31,6 +31,8 @@ class AddTaskView(APIView):
         except Project.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
+        print(request.data)
+
         try:
             task_data = AddTaskSchema(**request.data)
         except ValidationError as e:
@@ -38,7 +40,7 @@ class AddTaskView(APIView):
         except Exception as e:
             return Response(status=status.HTTP_400_BAD_REQUEST, data={"error": str(e)})
 
-        task, _ = ProjectTask.add_task_to_project(project=project, task_data=task_data.model_dump())
+        task, _ = ProjectTask.create(project=project, task_data=task_data.model_dump())
 
         if _:
             return Response(status=status.HTTP_201_CREATED, data={"task": task.serialize()})

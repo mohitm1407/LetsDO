@@ -61,7 +61,7 @@ class ProjectTask(models.Model):
     class Meta:
         unique_together = ("project", "title")
 
-    def serialize(self):
+    def serialize(self) -> TaskSchema:
         return TaskSchema(
             id=self.pk,
             project_id=self.project.pk,
@@ -72,8 +72,9 @@ class ProjectTask(models.Model):
             is_daily_task=self.is_daily_task,
         )
 
-    def add_task_to_project(self, project: "Project", task_data: dict, **kwargs) -> tuple["ProjectTask", bool]:
-        task, _ = ProjectTask.objects.get_or_create(
+    @classmethod
+    def create(cls, project: "Project", task_data: dict, **kwargs) -> tuple["ProjectTask", bool]:
+        task, _ = cls.objects.get_or_create(
             project=project,
             title=task_data["title"],
             defaults={
@@ -86,3 +87,8 @@ class ProjectTask(models.Model):
         )
 
         return task, _
+
+    @classmethod
+    def get_all_tasks(cls, project: "Project") -> list[dict]:
+        all_tasks = cls.objects.select_related("project").filter(project=project)
+        return [task.serialize().model_dump() for task in all_tasks]

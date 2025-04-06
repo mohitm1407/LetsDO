@@ -9,12 +9,19 @@ interface AddTaskProps {
   setOpen: (open: boolean) => void;
 }
 
+interface FormData {
+  title: string;
+  description: string;
+  priority: number;
+  status: number;
+}
+
 function AddTask({ open, setOpen }: AddTaskProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     title: '',
     description: '',
-    priority: 'medium',
-    status: 'todo'
+    priority: 1, // MEDIUM
+    status: 0 // TODO
   });
   const [errors, setErrors] = useState({
     title: '',
@@ -35,7 +42,7 @@ function AddTask({ open, setOpen }: AddTaskProps) {
     }
   };
 
-  const handleSelectChange = (field: string) => (event: SelectChangeEvent) => {
+  const handleSelectChange = (field: string) => (event: SelectChangeEvent<number>) => {
     setFormData({
       ...formData,
       [field]: event.target.value
@@ -62,7 +69,7 @@ function AddTask({ open, setOpen }: AddTaskProps) {
   const handleSubmit = () => {
     if (!validateForm()) return;
 
-    axios.post('http://localhost:8001/projects/1/add_task/', formData)
+    axios.post('http://localhost:8001/projects//add_task/', formData)
       .then((response) => {
         console.log(response);
         setOpen(false);
@@ -70,8 +77,8 @@ function AddTask({ open, setOpen }: AddTaskProps) {
         setFormData({
           title: '',
           description: '',
-          priority: 'medium',
-          status: 'todo'
+          priority: 1,
+          status: 0
         });
       })
       .catch((error) => {
@@ -140,9 +147,9 @@ function AddTask({ open, setOpen }: AddTaskProps) {
                 backgroundColor: 'white'
               }}
             >
-              <MenuItem value="low">Low</MenuItem>
-              <MenuItem value="medium">Medium</MenuItem>
-              <MenuItem value="high">High</MenuItem>
+              <MenuItem value={2}>Low</MenuItem>
+              <MenuItem value={1}>Medium</MenuItem>
+              <MenuItem value={0}>High</MenuItem>
             </Select>
           </FormControl>
 
@@ -157,9 +164,10 @@ function AddTask({ open, setOpen }: AddTaskProps) {
                 backgroundColor: 'white'
               }}
             >
-              <MenuItem value="todo">To Do</MenuItem>
-              <MenuItem value="in_progress">In Progress</MenuItem>
-              <MenuItem value="completed">Completed</MenuItem>
+              <MenuItem value={0}>To Do</MenuItem>
+              <MenuItem value={1}>In Progress</MenuItem>
+              <MenuItem value={2}>Completed</MenuItem>
+              <MenuItem value={3}>Dropped</MenuItem>
             </Select>
           </FormControl>
 
