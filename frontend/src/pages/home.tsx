@@ -1,11 +1,13 @@
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AddProject from "../components/AddProject";
 import ProjectList from "../components/projectList";
 import './home.css'; // We'll create this file separately
 
 function HomePage() {
+  const navigate = useNavigate();
   const [projectList, setProjectList] = useState([])
   const [isMinimized, setIsMinimized] = useState(false)
   const [isAddProjectOpen, setIsAddProjectOpen] = useState(false)
@@ -32,6 +34,10 @@ function HomePage() {
     fetchProjects()
   }, [])
 
+  const handleNavigation = (path: string) => {
+    navigate(path);
+  };
+
   return (
     <div className="layout">
       <nav className={`sidebar ${isMinimized ? 'minimized' : ''}`}>
@@ -53,7 +59,7 @@ function HomePage() {
             <i className="fas fa-tasks"></i>
             {!isMinimized && <span>Projects</span>}
           </li>
-          <li className="nav-item">
+          <li className="nav-item" onClick={() => handleNavigation('/calendar')}>
             <i className="fas fa-calendar"></i>
             {!isMinimized && <span>Calendar</span>}
           </li>

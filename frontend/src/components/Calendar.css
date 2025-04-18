@@ -1,0 +1,608 @@
+.calendar-container {
+  width: 100%;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+}
+
+.calendar-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin: 0 auto;
+}
+
+.calendar-controls h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  min-width: 220px;
+  text-align: center;
+}
+
+.control-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #4a4a4a;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+
+.control-btn:hover {
+  background-color: #f0f0f0;
+}
+
+.add-meeting-btn {
+  background-color: #4285f4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.add-meeting-btn:hover {
+  background-color: #3367d6;
+}
+
+/* View Selector */
+.view-selector {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+  flex-shrink: 0;
+}
+
+.view-btn {
+  background: transparent;
+  border: none;
+  color: #555;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin: 0 5px;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.view-btn:hover {
+  background-color: #f5f5f5;
+}
+
+.view-btn.active {
+  color: #4285f4;
+  font-weight: 600;
+}
+
+.view-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -11px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: #4285f4;
+}
+
+.mr-2 {
+  margin-right: 4px;
+}
+
+.calendar-body {
+  overflow-x: auto;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Monthly Calendar Styles */
+.calendar-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  height: 100%;
+}
+
+.calendar-table thead {
+  height: 40px;
+}
+
+.calendar-table th {
+  padding: 10px;
+  text-align: center;
+  font-weight: 500;
+  color: #555;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.calendar-table tbody {
+  height: calc(100% - 40px);
+}
+
+.calendar-table tbody tr {
+  height: calc((100% - 40px) / 6);
+}
+
+.calendar-day {
+  height: 120px;
+  border: 1px solid #e0e0e0;
+  vertical-align: top;
+  padding: 5px;
+  position: relative;
+}
+
+.empty-day {
+  background-color: #f9f9f9;
+  border: 1px solid #e0e0e0;
+}
+
+.day-number {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.day-meetings {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  overflow-y: auto;
+  max-height: calc(100% - 25px);
+}
+
+/* Weekly Calendar Styles */
+.weekly-calendar {
+  display: flex;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-grow: 1;
+  min-height: 600px;
+  height: 100%;
+}
+
+.weekly-day {
+  flex: 1;
+  min-width: 0;
+  border-right: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.weekly-day.today {
+  background-color: rgba(66, 133, 244, 0.05);
+}
+
+.weekly-day:last-child {
+  border-right: none;
+}
+
+.weekly-day-header {
+  padding: 10px;
+  border-bottom: 1px solid #e0e0e0;
+  text-align: center;
+  background-color: #f8f9fa;
+  flex-shrink: 0;
+}
+
+.weekly-day.today .weekly-day-header {
+  background-color: rgba(66, 133, 244, 0.1);
+  border-bottom: 2px solid #4285f4;
+}
+
+.weekly-day-name {
+  font-weight: 600;
+  color: #555;
+  font-size: 14px;
+}
+
+.weekly-day-number {
+  font-size: 20px;
+  font-weight: 500;
+  margin-top: 5px;
+  color: #333;
+}
+
+.weekly-day.today .weekly-day-number {
+  color: #4285f4;
+  font-weight: 700;
+}
+
+.weekly-meetings {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.weekly-meeting-item {
+  margin-bottom: 5px;
+}
+
+.no-meetings {
+  text-align: center;
+  color: #888;
+  font-style: italic;
+  padding: 20px 0;
+  font-size: 13px;
+}
+
+/* Yearly Calendar Styles */
+.yearly-calendar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  min-height: 600px;
+  height: 100%;
+  padding-bottom: 20px;
+  align-content: start;
+}
+
+.yearly-month {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.yearly-month-name {
+  padding: 8px;
+  text-align: center;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+  font-weight: 600;
+  color: #333;
+  flex-shrink: 0;
+}
+
+.yearly-month-table {
+  width: 100%;
+  border-collapse: collapse;
+  flex-grow: 1;
+}
+
+.yearly-month-table thead {
+  flex-shrink: 0;
+}
+
+.yearly-month-table th {
+  padding: 5px;
+  font-size: 11px;
+  color: #666;
+  text-align: center;
+  font-weight: 500;
+}
+
+.yearly-month-table tbody {
+  flex-grow: 1;
+}
+
+.yearly-day, .yearly-empty-day {
+  padding: 3px;
+  text-align: center;
+  font-size: 11px;
+  height: 24px;
+  width: 24px;
+  border: none;
+}
+
+.yearly-day {
+  color: #333;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.yearly-day:hover {
+  background-color: #f0f0f0;
+}
+
+.yearly-day.today {
+  border: 1px solid #4285f4;
+  font-weight: bold;
+}
+
+.yearly-day.has-meetings {
+  background-color: rgba(66, 133, 244, 0.2);
+  color: #4285f4;
+  font-weight: 600;
+  border-radius: 50%;
+}
+
+.yearly-day.has-meetings:hover {
+  background-color: rgba(66, 133, 244, 0.3);
+}
+
+.yearly-empty-day {
+  background-color: transparent;
+}
+
+.empty-week {
+  height: 24px;
+}
+
+.empty-week td {
+  border: none;
+}
+
+.meeting-item {
+  background-color: #4285f4;
+  color: white;
+  border-radius: 3px;
+  padding: 3px 5px;
+  font-size: 12px;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.meeting-item:hover {
+  background-color: #3367d6;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.meeting-item:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.meeting-time {
+  font-weight: 500;
+  font-size: 10px;
+  opacity: 0.9;
+}
+
+.meeting-title {
+  font-weight: 500;
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.add-meeting-modal,
+.meeting-details-modal {
+  background-color: white;
+  border-radius: 8px;
+  padding: 24px;
+  width: 500px;
+  max-width: 90%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.add-meeting-modal h3,
+.meeting-details-modal h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #333;
+  font-weight: 600;
+}
+
+/* Meeting details specific styles */
+.meeting-details-modal h3 {
+  color: #4285f4;
+  font-size: 1.5rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.meeting-detail-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 16px;
+}
+
+.detail-icon {
+  color: #666;
+  margin-right: 12px;
+  width: 18px;
+}
+
+.meeting-description-box {
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  padding: 15px;
+  margin: 20px 0;
+}
+
+.meeting-description-box h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #555;
+  font-size: 16px;
+}
+
+.meeting-description-box p {
+  margin: 0;
+  color: #333;
+  line-height: 1.5;
+}
+
+.meeting-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 24px;
+}
+
+.take-notes-btn {
+  background-color: #4285f4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.2s;
+}
+
+.take-notes-btn:hover {
+  background-color: #3367d6;
+}
+
+.close-btn {
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  color: #333;
+  border-radius: 4px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.close-btn:hover {
+  background-color: #e0e0e0;
+}
+
+/* Form styles */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-row {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 0;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #555;
+  font-size: 14px;
+}
+
+.form-group input, 
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #4285f4;
+  box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+}
+
+.form-group textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.form-actions button {
+  padding: 10px 16px;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.form-actions button[type="button"] {
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  color: #333;
+}
+
+.form-actions button[type="submit"] {
+  background-color: #4285f4;
+  border: none;
+  color: white;
+}
+
+.form-actions button[type="button"]:hover {
+  background-color: #e0e0e0;
+}
+
+.form-actions button[type="submit"]:hover {
+  background-color: #3367d6;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .yearly-calendar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .weekly-calendar {
+    flex-direction: column;
+  }
+  
+  .weekly-day {
+    height: auto;
+    min-height: 120px;
+    border-right: none;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .weekly-day:last-child {
+    border-bottom: none;
+  }
+} 
