@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "authenticator",
     "task_manager",
+    "note_manager",
 ]
 
 MIDDLEWARE = [
