@@ -36,14 +36,20 @@ function MeetingNotes() {
   const location = useLocation();
   const navigate = useNavigate();
   const meetingData = location.state?.meeting as Meeting;
+  const initialNoteData = location.state?.noteData;
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const [meeting, setMeeting] = useState<Meeting | null>(meetingData || null);
-  const [notes, setNotes] = useState<string>('');
+  const [notes, setNotes] = useState<string>(initialNoteData?.content || '');
   const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [lastSaved, setLastSaved] = useState<string>('');
+  const [lastSaved, setLastSaved] = useState<string>(
+    initialNoteData?.lastUpdated 
+      ? new Date(initialNoteData.lastUpdated).toLocaleString() 
+      : ''
+  );
   const [previewMode, setPreviewMode] = useState<boolean>(false);
   const [isAutoSave, setIsAutoSave] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
   
   useEffect(() => {
     if (!meeting && meetingId) {
@@ -51,10 +57,11 @@ function MeetingNotes() {
       fetchMeeting(parseInt(meetingId));
     }
     
-    if (meetingId) {
+    if (meetingId && !initialNoteData) {
+      // Only fetch notes if we didn't already receive them from the navigation state
       fetchNotes(parseInt(meetingId));
     }
-  }, [meetingId, meeting]);
+  }, [meetingId, meeting, initialNoteData]);
   
   // Auto-save effect
   useEffect(() => {
@@ -74,51 +81,72 @@ function MeetingNotes() {
   }, [notes, isAutoSave]);
   
   const fetchMeeting = (id: number) => {
-    // Mock API call - replace with actual endpoint when available
-    // Using mock data for now
-    const mockMeeting = {
-      id: id,
-      title: 'Sample Meeting',
-      date: new Date().toISOString().split('T')[0],
-      startTime: '09:00',
-      endTime: '10:00',
-      description: 'This is a sample meeting'
-    };
-    
-    setMeeting(mockMeeting);
+    // Make API call to get meeting data
+    axios.get(`http://0.0.0.0:8001/meetings/${id}`)
+      .then(response => {
+        console.log('Meeting data:', response.data);
+        
+        // Convert API format to frontend format
+        const startDateTime = new Date(response.data.start_time);
+        const endDateTime = new Date(response.data.end_time);
+        
+        setMeeting({
+          id: response.data.id,
+          title: response.data.title,
+          date: startDateTime.toISOString().split('T')[0],
+          startTime: startDateTime.toTimeString().substring(0, 5),
+          endTime: endDateTime.toTimeString().substring(0, 5),
+          description: response.data.description
+        });
+      })
+      .catch(error => {
+        console.error('Error fetching meeting:', error);
+        setError('Failed to load meeting details.');
+      });
   };
   
   const fetchNotes = (meetingId: number) => {
-    // Mock API call - replace with actual endpoint when available
-    // Using mock data for now
-    const savedNotes = localStorage.getItem(`meeting_notes_${meetingId}`);
-    if (savedNotes) {
-      const noteData = JSON.parse(savedNotes) as MeetingNote;
-      setNotes(noteData.content);
-      setLastSaved(new Date(noteData.lastUpdated).toLocaleString());
-    }
+    
+    
+    // Make API call to get meeting notes
+    axios.get(`http://0.0.0.0:8001/meetings/${meetingId}/note/`)
+      .then(response => {
+        console.log('Note data:', response.data);
+        setNotes(response.data.content);
+        setLastSaved(new Date(response.data.updated_at).toLocaleString());
+      })
+      .catch(error => {
+        console.error('Error fetching notes:', error);
+        // Note might not exist yet, which is fine
+        if (error.response && error.response.status !== 404) {
+          setError('Failed to load notes.');
+        }
+      });
   };
   
   const saveNotes = () => {
     if (!meetingId || !notes.trim()) return;
     
     setIsSaving(true);
+    setError('');
     
-    // Mock API call - replace with actual endpoint when available
-    // using localStorage for demo
-    const noteData: MeetingNote = {
-      meetingId: parseInt(meetingId),
-      content: notes,
-      lastUpdated: new Date().toISOString()
+    // Prepare note data - only include content
+    const noteData = {
+      content: notes
     };
     
-    localStorage.setItem(`meeting_notes_${meetingId}`, JSON.stringify(noteData));
-    
-    // Simulate API call delay
-    setTimeout(() => {
-      setIsSaving(false);
-      setLastSaved(new Date().toLocaleString());
-    }, 600);
+    // Make API call to edit_note endpoint
+    axios.post(`http://0.0.0.0:8001/meetings/${meetingId}/note/edit/`, noteData)
+      .then(response => {
+        console.log('Notes saved:', response.data);
+        setIsSaving(false);
+        setLastSaved(new Date(response.data.updated_at).toLocaleString());
+      })
+      .catch(error => {
+        console.error('Error saving notes:', error);
+        setError('Failed to save notes. Please try again.');
+        setIsSaving(false);
+      });
   };
   
   const handleBack = () => {
@@ -333,6 +361,21 @@ function MeetingNotes() {
         <button className="back-button" onClick={handleBack}>
           <i className="fas fa-arrow-left"></i> Back to Calendar
         </button>
+        
+        {error && (
+          <div className="error-message" style={{
+            backgroundColor: '#ffebee',
+            color: '#d32f2f',
+            padding: '10px',
+            borderRadius: '4px',
+            marginBottom: '15px',
+            fontSize: '14px',
+            fontWeight: 500
+          }}>
+            <i className="fas fa-exclamation-circle" style={{ marginRight: '8px' }}></i>
+            {error}
+          </div>
+        )}
         
         <div className="meeting-title-section">
           <h1>{meeting.title}</h1>

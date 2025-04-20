@@ -26,6 +26,7 @@ function Calendar({ userId }: CalendarProps) {
   const [showMeetingDetails, setShowMeetingDetails] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
   const [calendarView, setCalendarView] = useState<CalendarView>('month');
+  const [errorMessage, setErrorMessage] = useState<string>('');
   
   // Initialize with today's date
   const today = new Date().toISOString().split('T')[0];
@@ -45,42 +46,108 @@ function Calendar({ userId }: CalendarProps) {
   const fetchMeetings = () => {
     // Mock API call - replace with actual endpoint when available
     // Using mock data for now
-    setMeetings([
-      {
-        id: 1,
-        title: 'Team Standup',
-        date: new Date().toISOString().split('T')[0],
-        startTime: '09:00',
-        endTime: '09:30',
-        description: 'Daily team standup meeting'
-      },
-      {
-        id: 2,
-        title: 'Project Review',
-        date: new Date().toISOString().split('T')[0],
-        startTime: '14:00',
-        endTime: '15:00',
-        description: 'Quarterly project review with stakeholders'
-      }
-    ]);
+    axios.get('http://0.0.0.0:8001/meetings/')
+      .then(response => {
+        // Convert API response format to frontend Meeting format
+        console.log("MEETINGS" ,response.data)
+        const formattedMeetings = response.data.map((meeting: any) => {
+          // meeting.start_time and meeting.end_time are already in ISO format
+          // so we can use them directly without converting
+          const startDateTime = meeting.start_time;
+          const endDateTime = meeting.end_time;
+          
+          return {
+            id: meeting.id,
+            title: meeting.title,
+            date: startDateTime.split('T')[0],
+            startTime: startDateTime.split('T')[1].slice(0,5),
+            endTime: endDateTime.split('T')[1].slice(0,5),
+            description: meeting.description
+          };
+        });
+        setMeetings(formattedMeetings);
+        console.log(formattedMeetings)
+      })
+      .catch(error => {
+        console.error('Error fetching meetings:', error);
+        setErrorMessage('Failed to fetch meetings');
+      });
   };
 
   const handleAddMeeting = () => {
-    // Mock implementation for now
-    const mockMeeting = {
-      id: meetings.length + 1,
-      ...newMeeting
+    // Clear any previous error messages
+    setErrorMessage('');
+    
+    // Get user data from localStorage
+    
+    // Prepare the data for API call
+    const meetingData = {
+      title: newMeeting.title,
+      description: newMeeting.description,
+      // Format date and time strings for backend in ISO 8601 format
+      start_time: `${newMeeting.date}T${newMeeting.startTime}:00Z`,
+      end_time: `${newMeeting.date}T${newMeeting.endTime}:00Z`,
+      tasks: [],
     };
     
-    setMeetings([...meetings, mockMeeting]);
-    setShowAddMeeting(false);
-    setNewMeeting({
-      title: '',
-      date: today,
-      startTime: '09:00',
-      endTime: '10:00',
-      description: ''
-    });
+    // Make API call to create meeting with credentials
+    axios.post('http://0.0.0.0:8001/meetings/create/', meetingData)
+      .then(response => {
+        console.log('Meeting created:', response.data);
+        
+        // Check if status code is 201 (Created)
+        if (response.status === 201) {
+          // Convert API response to frontend Meeting format
+          const startDateTime = new Date(response.data.start_time);
+          const endDateTime = new Date(response.data.end_time);
+          
+          const createdMeeting: Meeting = {
+            id: response.data.id,
+            title: response.data.title,
+            date: startDateTime.toISOString().split('T')[0],
+            startTime: startDateTime.toTimeString().substring(0, 5),
+            endTime: endDateTime.toTimeString().substring(0, 5),
+            description: response.data.description
+          };
+          
+          // Add the new meeting to the meetings list
+          setMeetings([...meetings, createdMeeting]);
+          
+          // Reset form and close modal
+          setShowAddMeeting(false);
+          setNewMeeting({
+            title: '',
+            date: today,
+            startTime: '09:00',
+            endTime: '10:00',
+            description: ''
+          });
+        } else {
+          // Handle unexpected success status codes
+          setErrorMessage(`Unexpected response: ${response.status}`);
+        }
+      })
+      .catch(error => {
+        console.error('Error creating meeting:', error);
+        
+        // Handle different error responses
+        if (error.response) {
+          // The server responded with an error status code
+          if (error.response.status === 401) {
+            setErrorMessage('Authentication failed. Please log in again.');
+          } else if (error.response.data && error.response.data.error) {
+            setErrorMessage(error.response.data.error);
+          } else {
+            setErrorMessage(`Error (${error.response.status}): Unable to create meeting.`);
+          }
+        } else if (error.request) {
+          // The request was made but no response was received
+          setErrorMessage('Server did not respond. Please try again later.');
+        } else {
+          // Something happened in setting up the request
+          setErrorMessage(`Error: ${error.message}`);
+        }
+      });
   };
 
   const handleMeetingClick = (meeting: Meeting) => {
@@ -90,12 +157,35 @@ function Calendar({ userId }: CalendarProps) {
 
   const navigateToNotes = () => {
     if (selectedMeeting) {
-      // Navigate to the notes page with meeting details as state/params
-      navigate(`/meeting-notes/${selectedMeeting.id}`, { 
-        state: { 
-          meeting: selectedMeeting 
-        } 
-      });
+      // Get user data from localStorage for authentication
+      // Make API call to get meeting notes
+      console.log(selectedMeeting)
+      axios.get(`http://0.0.0.0:8001/meetings/${selectedMeeting.id}/note/`)
+        .then(response => {
+          console.log('Meeting note data:', response.data);
+          
+          // Navigate to meeting notes page with both meeting and note data
+          navigate(`/meeting-notes/${selectedMeeting.id}`, { 
+            state: { 
+              meeting: selectedMeeting,
+              noteData: {
+                content: response.data.content,
+                lastUpdated: response.data.updated_at
+              }
+            } 
+          });
+        })
+        .catch(error => {
+          console.error('Error fetching meeting notes:', error);
+          
+          // Even if there's an error, still navigate to the notes page
+          // The notes page can handle creating a new note if none exists
+          navigate(`/meeting-notes/${selectedMeeting.id}`, { 
+            state: { 
+              meeting: selectedMeeting
+            } 
+          });
+        });
     }
   };
 
@@ -439,6 +529,23 @@ function Calendar({ userId }: CalendarProps) {
         <div className="modal-overlay" onClick={() => setShowAddMeeting(false)}>
           <div className="add-meeting-modal" onClick={(e) => e.stopPropagation()}>
             <h3>Add New Meeting</h3>
+            
+            {/* Add error message display at the top of the form */}
+            {errorMessage && (
+              <div className="error-message" style={{
+                backgroundColor: '#ffebee',
+                color: '#d32f2f',
+                padding: '10px',
+                borderRadius: '4px',
+                marginBottom: '15px',
+                fontSize: '14px',
+                fontWeight: 500
+              }}>
+                <i className="fas fa-exclamation-circle" style={{ marginRight: '8px' }}></i>
+                {errorMessage}
+              </div>
+            )}
+            
             <form onSubmit={(e) => { e.preventDefault(); handleAddMeeting(); }}>
               <div className="form-group">
                 <label htmlFor="meeting-title">Title</label>

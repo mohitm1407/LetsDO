@@ -605,4 +605,21 @@
   .weekly-day:last-child {
     border-bottom: none;
   }
+}
+
+/* Add this to your existing Calendar.css file */
+.error-message {
+  background-color: #ffebee;
+  color: #d32f2f;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.error-message i {
+  margin-right: 8px;
 } 

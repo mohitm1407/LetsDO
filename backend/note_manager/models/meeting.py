@@ -1,15 +1,28 @@
 from django.db import models
-from pydantic import BaseModel
-from datetime import datetime, time
+from pydantic import BaseModel, Field
+from datetime import datetime
+from typing import List, Optional
 from task_manager.models.project_task import ProjectTask
 
 
 class MeetingSchema(BaseModel):
+    id: Optional[int] = None
     title: str
     description: str
-    start_time: datetime
-    end_time: datetime
-    tasks: list[int]
+    # Annotate as datetime but parse from ISO string
+    start_time: str
+    end_time: str
+    tasks: List[int] = Field(default_factory=list)
+    
+    class Config:
+        # Configure JSON schema to handle datetime conversion
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
+        # Allow parsing of ISO strings to datetime objects
+        json_decoders = {
+            datetime: datetime.fromisoformat
+        }
 
 
 class Meeting(models.Model):
@@ -27,10 +40,11 @@ class Meeting(models.Model):
 
     def serialize(self) -> MeetingSchema:
         return MeetingSchema(
+            id=self.pk,
             title=self.title,
             description=self.description,
-            start_time=self.start_time,
-            end_time=self.end_time,
+            start_time=self.start_time.isoformat(),
+            end_time=self.end_time.isoformat(),
             tasks=[task.pk for task in self.tasks.all()],
         )
 
@@ -39,12 +53,13 @@ class Meeting(models.Model):
         meeting = cls(
             title=meeting_details.title,
             description=meeting_details.description,
-            start_time=meeting_details.start_time,
-            end_time=meeting_details.end_time,
+            start_time=datetime.fromisoformat(meeting_details.start_time),
+            end_time=datetime.fromisoformat(meeting_details.end_time),
         )
-        tasks = ProjectTask.objects.filter(id__in=meeting_details.tasks)
-        meeting.tasks.set(tasks)
         meeting.save()
+        if meeting_details.tasks:
+            tasks = ProjectTask.objects.filter(id__in=meeting_details.tasks)
+            meeting.tasks.set(tasks)
         return meeting
 
     @classmethod
