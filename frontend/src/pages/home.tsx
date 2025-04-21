@@ -1,15 +1,13 @@
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import AddProject from "../components/AddProject";
+import Sidebar from '../components/Sidebar';
 import ProjectList from "../components/projectList";
 import './home.css'; // We'll create this file separately
 
 function HomePage() {
-  const navigate = useNavigate();
   const [projectList, setProjectList] = useState([])
-  const [isMinimized, setIsMinimized] = useState(false)
   const [isAddProjectOpen, setIsAddProjectOpen] = useState(false)
   
   const fetchProjects = () => {
@@ -34,46 +32,10 @@ function HomePage() {
     fetchProjects()
   }, [])
 
-  const handleNavigation = (path: string) => {
-    navigate(path);
-  };
-
   return (
     <div className="layout">
-      <nav className={`sidebar ${isMinimized ? 'minimized' : ''}`}>
-        <div className="sidebar-header">
-          <h2>{!isMinimized && 'Menu'}</h2>
-          <button 
-            className="toggle-btn"
-            onClick={() => setIsMinimized(!isMinimized)}
-          >
-            <i className={`fas ${isMinimized ? 'fa-angle-right' : 'fa-angle-left'} fa-lg`}></i>
-          </button>
-        </div>
-        <ul className="nav-links">
-          <li className="nav-item active">
-            <i className="fas fa-home"></i>
-            {!isMinimized && <span>Dashboard</span>}
-          </li>
-          <li className="nav-item">
-            <i className="fas fa-tasks"></i>
-            {!isMinimized && <span>Projects</span>}
-          </li>
-          <li className="nav-item" onClick={() => handleNavigation('/calendar')}>
-            <i className="fas fa-calendar"></i>
-            {!isMinimized && <span>Calendar</span>}
-          </li>
-          <li className="nav-item">
-            <i className="fas fa-chart-bar"></i>
-            {!isMinimized && <span>Analytics</span>}
-          </li>
-          <li className="nav-item">
-            <i className="fas fa-cog"></i>
-            {!isMinimized && <span>Settings</span>}
-          </li>
-        </ul>
-      </nav>
-
+      <Sidebar />
+      
       <div className="main-wrapper">
         <header className="home-header">
           <h1>My Projects</h1>

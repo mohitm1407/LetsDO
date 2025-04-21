@@ -1,0 +1,369 @@
+import { 
+  Box, 
+  Card, 
+  Chip, 
+  Container, 
+  Divider, 
+  FormControl, 
+  Grid, 
+  IconButton, 
+  InputAdornment, 
+  InputLabel, 
+  MenuItem, 
+  Select, 
+  TextField, 
+  Typography 
+} from '@mui/material';
+import { SelectChangeEvent } from '@mui/material/Select';
+import { styled } from '@mui/material/styles';
+import '@fortawesome/fontawesome-free/css/all.min.css';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import SearchIcon from '@mui/icons-material/Search';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ScheduleIcon from '@mui/icons-material/Schedule';
+import HourglassTopIcon from '@mui/icons-material/HourglassTop';
+import CancelIcon from '@mui/icons-material/Cancel';
+import LowPriorityIcon from '@mui/icons-material/LowPriority';
+import FlagIcon from '@mui/icons-material/Flag';
+import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
+import '../pages/home.css';
+import Sidebar from '../components/Sidebar';
+import EditTaskModal from '../components/EditTaskModal';
+
+// Styled components for custom UI elements
+const StyledTaskCard = styled(Card)(({ theme }) => ({
+  padding: theme.spacing(2.5),
+  marginBottom: theme.spacing(2),
+  borderRadius: theme.spacing(1),
+  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+  transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+  cursor: 'pointer',
+  '&:hover': {
+    transform: 'translateY(-4px)',
+    boxShadow: '0 10px 20px rgba(0, 0, 0, 0.1)',
+  }
+}));
+
+// Type definitions
+interface Task {
+  id: number;
+  title: string;
+  description: string;
+  priority: number;
+  status: number;
+  created_at: string;
+  project_name: string;
+  project_id: number;
+}
+
+// Map priority and status to human-readable labels and colors
+const getPriorityDetails = (priority: number) => {
+  switch (priority) {
+    case 0:
+      return { label: 'High', color: '#d32f2f', icon: <PriorityHighIcon /> };
+    case 1:
+      return { label: 'Medium', color: '#ed6c02', icon: <FlagIcon /> };
+    case 2:
+      return { label: 'Low', color: '#2e7d32', icon: <LowPriorityIcon /> };
+    default:
+      return { label: 'Unknown', color: '#757575', icon: <FlagIcon /> };
+  }
+};
+
+const getStatusDetails = (status: number) => {
+  switch (status) {
+    case 0:
+      return { label: 'To Do', color: '#0288d1', icon: <ScheduleIcon /> };
+    case 1:
+      return { label: 'In Progress', color: '#9c27b0', icon: <HourglassTopIcon /> };
+    case 2:
+      return { label: 'Completed', color: '#2e7d32', icon: <CheckCircleIcon /> };
+    case 3:
+      return { label: 'Dropped', color: '#757575', icon: <CancelIcon /> };
+    default:
+      return { label: 'Unknown', color: '#757575', icon: <ScheduleIcon /> };
+  }
+};
+
+function TasksPage() {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  const fetchTasks = async () => {
+    setLoading(true);
+    try {
+      // Assuming user ID is stored in localStorage
+      const userData = localStorage.getItem('user');
+      const userId = userData ? JSON.parse(userData).id : '1'; // Default to 1 if not found
+      
+      const response = await axios.get(`http://0.0.0.0:8001/tasks/${userId}`);
+      setTasks(response.data.task_list || []);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching tasks:', err);
+      setError('Failed to load tasks. Please try again later.');
+      setTasks([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFilterChange = (event: SelectChangeEvent) => {
+    setFilter(event.target.value);
+  };
+
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.target.value);
+  };
+
+  // Filter tasks based on selected filter and search query
+  const filteredTasks = tasks.filter(task => {
+    const matchesSearch = 
+      task.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      task.description.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    if (!matchesSearch) return false;
+    
+    switch (filter) {
+      case 'todo':
+        return task.status === 0;
+      case 'inprogress':
+        return task.status === 1;
+      case 'completed':
+        return task.status === 2;
+      case 'dropped':
+        return task.status === 3;
+      case 'high':
+        return task.priority === 0;
+      case 'medium':
+        return task.priority === 1;
+      case 'low':
+        return task.priority === 2;
+      default:
+        return true;
+    }
+  });
+
+  // Format date string to readable format
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  };
+
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task);
+    setEditModalOpen(true);
+  };
+
+  return (
+    <div className="layout">
+      <Sidebar />
+
+      <div className="main-wrapper">
+        <Box
+          sx={{
+            backgroundColor: '#f5f7fa',
+            pt: 2,
+            pb: 4,
+            height: '100%',
+            overflow: 'auto',
+          }}
+        >
+          <Container maxWidth="xl">
+            <Box sx={{ mb: 4 }}>
+              <Typography variant="h4" component="h1" fontWeight="bold" sx={{ mb: 1 }}>
+                My Tasks
+              </Typography>
+              <Typography variant="body1" color="text.secondary">
+                Manage and track all your tasks in one place
+              </Typography>
+            </Box>
+
+            {/* Search and filter section */}
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                mb: 4, 
+                gap: 2,
+                flexWrap: 'wrap'
+              }}
+            >
+              <TextField
+                placeholder="Search tasks..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+                variant="outlined"
+                sx={{ flexGrow: 1, minWidth: 200 }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              
+              <FormControl sx={{ minWidth: 180 }}>
+                <InputLabel id="task-filter-label">
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <FilterListIcon sx={{ mr: 1 }} /> Filter Tasks
+                  </Box>
+                </InputLabel>
+                <Select
+                  labelId="task-filter-label"
+                  value={filter}
+                  label="Filter Tasks"
+                  onChange={handleFilterChange}
+                >
+                  <MenuItem value="all">All Tasks</MenuItem>
+                  <Divider />
+                  <MenuItem value="todo">To Do</MenuItem>
+                  <MenuItem value="inprogress">In Progress</MenuItem>
+                  <MenuItem value="completed">Completed</MenuItem>
+                  <MenuItem value="dropped">Dropped</MenuItem>
+                  <Divider />
+                  <MenuItem value="high">High Priority</MenuItem>
+                  <MenuItem value="medium">Medium Priority</MenuItem>
+                  <MenuItem value="low">Low Priority</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+
+            {/* Tasks grid/list */}
+            {loading ? (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography>Loading tasks...</Typography>
+              </Box>
+            ) : error ? (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography color="error">{error}</Typography>
+              </Box>
+            ) : filteredTasks.length === 0 ? (
+              <Box 
+                sx={{ 
+                  textAlign: 'center', 
+                  py: 6,
+                  backgroundColor: 'white',
+                  borderRadius: 2,
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
+                }}
+              >
+                <Typography variant="h6" color="text.secondary" gutterBottom>
+                  No tasks found
+                </Typography>
+                <Typography color="text.secondary">
+                  {searchQuery ? 'Try a different search term' : 'Create some tasks to get started'}
+                </Typography>
+              </Box>
+            ) : (
+              <Grid container spacing={3}>
+                {filteredTasks.map(task => {
+                  const priorityDetails = getPriorityDetails(task.priority);
+                  const statusDetails = getStatusDetails(task.status);
+                  
+                  return (
+                    <Grid item xs={12} md={6} lg={4} key={task.id}>
+                      <StyledTaskCard onClick={() => handleTaskClick(task)}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                          <Typography 
+                            variant="subtitle1" 
+                            sx={{ fontWeight: 'bold', mb: 0.5 }}
+                          >
+                            {task.title}
+                          </Typography>
+                          
+                          <Box>
+                            <Chip 
+                              size="small" 
+                              label={priorityDetails.label}
+                              icon={priorityDetails.icon}
+                              sx={{ 
+                                backgroundColor: `${priorityDetails.color}15`,
+                                color: priorityDetails.color,
+                                fontWeight: 'bold',
+                                mr: 1
+                              }}
+                            />
+                            <Chip 
+                              size="small" 
+                              label={statusDetails.label}
+                              icon={statusDetails.icon}
+                              sx={{ 
+                                backgroundColor: `${statusDetails.color}15`,
+                                color: statusDetails.color,
+                                fontWeight: 'bold'
+                              }}
+                            />
+                          </Box>
+                        </Box>
+                        
+                        <Typography 
+                          variant="body2" 
+                          color="text.secondary"
+                          sx={{ 
+                            mb: 2,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                          }}
+                        >
+                          {task.description}
+                        </Typography>
+                        
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Chip 
+                            size="small" 
+                            label={task.project_name}
+                            sx={{ 
+                              backgroundColor: '#e3f2fd',
+                              color: '#1976d2',
+                            }}
+                          />
+                          {/* <Typography variant="caption" color="text.secondary">
+                            Created {formatDate(task.created_at)}
+                          </Typography> */}
+                        </Box>
+                      </StyledTaskCard>
+                    </Grid>
+                  );
+                })}
+              </Grid>
+            )}
+
+            {/* Edit Task Modal */}
+            <EditTaskModal
+              open={editModalOpen}
+              onClose={() => setEditModalOpen(false)}
+              task={selectedTask}
+              onTaskUpdated={fetchTasks}
+            />
+          </Container>
+        </Box>
+      </div>
+    </div>
+  );
+}
+
+export default TasksPage; 

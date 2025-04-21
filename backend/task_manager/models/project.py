@@ -49,15 +49,14 @@ class Project(models.Model):
         except Exception as e:
             return []
 
-        project_list: QuerySet[Project] = Project.objects.filter(user=user)
-
+        project_list: QuerySet[Project] = cls.objects.filter(user=user)
         return [p.serialize().model_dump() for p in project_list]
 
     @classmethod
     def create(cls, user_id: int, display_name: str, description: Optional[str]) -> "Project":
         try:
             user = User.objects.get(id=user_id)
-            project, _ = Project.objects.get_or_create(
+            project, _ = cls.objects.get_or_create(
                 user=user,
                 display_name=display_name,
                 description=description,

@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from authenticator.views import LoginView, SignUpView
-from task_manager.views import ProjectListView, AddTaskView, AddProjectView
+from task_manager.views import ProjectListView, AddTaskView, AddProjectView, TaskListView
 from note_manager.views import NewMeetingView, MeetingNoteView, EditNoteView , UserMeetingsView
 
 urlpatterns = [
@@ -31,4 +31,5 @@ urlpatterns = [
     path("meetings/<int:meeting_id>/note/", MeetingNoteView.as_view(), name="meeting_note"),
     path("meetings/<int:meeting_id>/note/edit/", EditNoteView.as_view(), name="edit_note"),
     path("meetings/", UserMeetingsView.as_view(), name="user_meetings"),
+    path("tasks/<int:user_id>/", TaskListView.as_view(), name="task_view"),
 ]

@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 class TaskSchema(BaseModel):
     id: int
-    project_id: int
+    project_title: str
     title: str
     priority: int
     status: int
@@ -64,7 +64,7 @@ class ProjectTask(models.Model):
     def serialize(self) -> TaskSchema:
         return TaskSchema(
             id=self.pk,
-            project_id=self.project.pk,
+            project_title=self.project.display_name,
             title=self.title,
             priority=self.priority,
             status=self.status,
@@ -92,3 +92,8 @@ class ProjectTask(models.Model):
     def get_all_tasks(cls, project: "Project") -> list[dict]:
         all_tasks = cls.objects.select_related("project").filter(project=project)
         return [task.serialize().model_dump() for task in all_tasks]
+
+    @classmethod
+    def get_task_for_user(cls, user_id: int) -> "ProjectTask":
+        tasks= cls.objects.select_related("project").filter(project__user_id=user_id)
+        return [task.serialize().model_dump() for task in tasks]
