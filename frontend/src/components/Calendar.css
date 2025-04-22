@@ -622,4 +622,167 @@
 
 .error-message i {
   margin-right: 8px;
+}
+
+/* Add to existing CSS */
+
+.hourly-slot {
+  display: flex;
+  flex-direction: column;
+  min-height: 50px;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 4px;
+  position: relative;
+}
+
+.hourly-slot:hover {
+  background-color: rgba(33, 150, 243, 0.05);
+}
+
+.hourly-slot.drag-over {
+  background-color: rgba(33, 150, 243, 0.1);
+  border: 2px dashed #2196f3;
+}
+
+.hour-label {
+  font-size: 0.7rem;
+  color: #757575;
+  position: absolute;
+  left: 4px;
+  top: 4px;
+}
+
+.weekly-calendar {
+  display: flex;
+  height: 600px;
+  overflow-y: auto;
+}
+
+.weekly-day {
+  flex: 1;
+  min-width: 120px;
+  max-width: 1fr;
+  border-right: 1px solid #e0e0e0;
+}
+
+.weekly-day:last-child {
+  border-right: none;
+}
+
+.weekly-meetings {
+  overflow-y: auto;
+  height: calc(100% - 40px);
+}
+
+.calendar-day {
+  position: relative;
+  min-height: 100px;
+  border: 1px solid #e0e0e0;
+  padding: 5px;
+  vertical-align: top;
+}
+
+.calendar-day:hover {
+  background-color: rgba(33, 150, 243, 0.05);
+}
+
+/* Drag over styles */
+.calendar-day.drag-over {
+  background-color: rgba(33, 150, 243, 0.1);
+  border: 2px dashed #2196f3;
+}
+
+/* Update existing meeting styles */
+.meeting-item {
+  background-color: #bbdefb;
+  color: #0d47a1;
+  border-radius: 4px;
+  padding: 5px;
+  margin-bottom: 5px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.meeting-item:hover {
+  background-color: #90caf9;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Add to existing CSS */
+
+.task-select-container {
+  background-color: white;
+  border-radius: 4px;
+  min-height: 56px;
+  margin-bottom: 5px;
+}
+
+.task-help-text {
+  font-size: 12px;
+  color: #757575;
+  margin-top: 4px;
+}
+
+/* Style for the Autocomplete component */
+.MuiAutocomplete-root .MuiOutlinedInput-root {
+  padding: 5px 8px;
+}
+
+.MuiAutocomplete-tag {
+  margin: 2px;
+}
+
+/* Make sure the modal is wide enough for the task selection UI */
+.add-meeting-modal {
+  width: 600px;
+  max-width: 90%;
+}
+
+/* Add to existing CSS */
+
+.task-selection-container {
+  border-radius: 8px;
+  overflow: hidden;
+  padding-bottom: 16px;
+}
+
+.task-selection-container label {
+  margin-bottom: 16px;
+  display: block;
+  font-weight: 600;
+}
+
+/* Task list styles */
+.MuiList-root .MuiListItem-root {
+  padding: 8px;
+  margin-bottom: 4px;
+}
+
+.MuiList-root .MuiListItemText-root .MuiTypography-root {
+  font-size: 0.875rem;
+}
+
+.MuiList-root .MuiListItemText-secondary {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+/* Tab styles */
+.MuiTabs-root {
+  min-height: 40px;
+}
+
+.MuiTab-root {
+  min-height: 40px;
+  padding: 8px 16px;
+}
+
+/* Make the modal larger for better task UI */
+.add-meeting-modal {
+  width: 700px;
+  max-width: 95%;
+  max-height: 90vh;
+  overflow-y: auto;
 } 

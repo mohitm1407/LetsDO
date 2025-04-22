@@ -2,6 +2,38 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './Calendar.css';
+import { 
+  Autocomplete, 
+  Box, 
+  Chip, 
+  Divider, 
+  List, 
+  ListItem, 
+  ListItemText, 
+  Paper, 
+  Tab, 
+  Tabs, 
+  TextField, 
+  Typography 
+} from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ScheduleIcon from '@mui/icons-material/Schedule';
+import HourglassTopIcon from '@mui/icons-material/HourglassTop';
+import CancelIcon from '@mui/icons-material/Cancel';
+import LowPriorityIcon from '@mui/icons-material/LowPriority';
+import FlagIcon from '@mui/icons-material/Flag';
+import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
+import SearchIcon from '@mui/icons-material/Search';
+import AddIcon from '@mui/icons-material/Add';
+
+interface Task {
+  id: number;
+  title: string;
+  description: string;
+  priority: number;
+  status: number;
+  project_name: string;
+}
 
 interface Meeting {
   id: number;
@@ -14,19 +46,24 @@ interface Meeting {
 
 interface CalendarProps {
   userId: number;
+  onDrop?: (date: string, time: string) => void;
 }
 
 type CalendarView = 'month' | 'week' | 'year';
 
-function Calendar({ userId }: CalendarProps) {
+function Calendar({ userId, onDrop }: CalendarProps) {
   const navigate = useNavigate();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [selectedTasks, setSelectedTasks] = useState<Task[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showAddMeeting, setShowAddMeeting] = useState(false);
   const [showMeetingDetails, setShowMeetingDetails] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
   const [calendarView, setCalendarView] = useState<CalendarView>('month');
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [taskSearchQuery, setTaskSearchQuery] = useState('');
+  const [taskTabValue, setTaskTabValue] = useState(0); // 0: Todo, 1: In Progress
   
   // Initialize with today's date
   const today = new Date().toISOString().split('T')[0];
@@ -41,7 +78,24 @@ function Calendar({ userId }: CalendarProps) {
 
   useEffect(() => {
     fetchMeetings();
+    fetchTasks();
   }, [currentDate]);
+
+  const fetchTasks = async () => {
+    try {
+      const userData = localStorage.getItem('user');
+      const userId = userData ? JSON.parse(userData).id : '1';
+      
+      const response = await axios.get(`http://0.0.0.0:8001/tasks/${userId}`);
+      const taskList = response.data.task_list || [];
+      
+      // Filter out completed and dropped tasks
+      const activeTasks = taskList.filter((task: Task) => task.status !== 2 && task.status !== 3);
+      setTasks(activeTasks);
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+    }
+  };
 
   const fetchMeetings = () => {
     // Mock API call - replace with actual endpoint when available
@@ -78,8 +132,6 @@ function Calendar({ userId }: CalendarProps) {
     // Clear any previous error messages
     setErrorMessage('');
     
-    // Get user data from localStorage
-    
     // Prepare the data for API call
     const meetingData = {
       title: newMeeting.title,
@@ -87,7 +139,7 @@ function Calendar({ userId }: CalendarProps) {
       // Format date and time strings for backend in ISO 8601 format
       start_time: `${newMeeting.date}T${newMeeting.startTime}:00Z`,
       end_time: `${newMeeting.date}T${newMeeting.endTime}:00Z`,
-      tasks: [],
+      tasks: selectedTasks.map(task => task.id), // Include the selected task IDs
     };
     
     // Make API call to create meeting with credentials
@@ -122,6 +174,7 @@ function Calendar({ userId }: CalendarProps) {
             endTime: '10:00',
             description: ''
           });
+          setSelectedTasks([]);
         } else {
           // Handle unexpected success status codes
           setErrorMessage(`Unexpected response: ${response.status}`);
@@ -197,6 +250,36 @@ function Calendar({ userId }: CalendarProps) {
     return new Date(year, month, 1).getDay();
   };
 
+  // Add drag feedback handlers
+  const handleDragOver = (e: React.DragEvent<HTMLElement>) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    
+    // Add visual feedback
+    e.currentTarget.classList.add('drag-over');
+  };
+  
+  const handleDragLeave = (e: React.DragEvent<HTMLElement>) => {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLElement>, dateString: string, hour?: number) => {
+    e.preventDefault();
+    
+    // Remove the visual feedback
+    e.currentTarget.classList.remove('drag-over');
+    
+    // Default to 9 AM if no hour is provided
+    const timeString = hour !== undefined 
+      ? `${hour.toString().padStart(2, '0')}:00` 
+      : '09:00';
+    
+    if (onDrop) {
+      onDrop(dateString, timeString);
+    }
+  };
+
   const generateMonthlyCalendar = () => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
@@ -221,7 +304,13 @@ function Calendar({ userId }: CalendarProps) {
           const dayMeetings = meetings.filter(meeting => meeting.date === dateString);
           
           week.push(
-            <td key={`day-${day}`} className="calendar-day">
+            <td 
+              key={`day-${day}`} 
+              className="calendar-day"
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, dateString)}
+            >
               <div className="day-number">{day}</div>
               <div className="day-meetings">
                 {dayMeetings.map(meeting => (
@@ -269,27 +358,47 @@ function Calendar({ userId }: CalendarProps) {
       const dayMeetings = meetings.filter(meeting => meeting.date === dateString);
       const isToday = dateString === new Date().toISOString().split('T')[0];
       
+      // Create hourly slots for better drag and drop support
+      const hourlySlots = [];
+      for (let hour = 7; hour < 20; hour++) {
+        const hourStr = hour.toString().padStart(2, '0');
+        const timeStr = `${hourStr}:00`;
+        const meetingsAtHour = dayMeetings.filter(m => m.startTime.startsWith(hourStr));
+        
+        hourlySlots.push(
+          <div 
+            key={`hour-${hour}`} 
+            className="hourly-slot"
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={(e) => handleDrop(e, dateString, hour)}
+          >
+            <div className="hour-label">{hour > 12 ? hour - 12 : hour} {hour >= 12 ? 'PM' : 'AM'}</div>
+            {meetingsAtHour.map(meeting => (
+              <div 
+                key={meeting.id} 
+                className="meeting-item weekly-meeting-item"
+                onClick={() => handleMeetingClick(meeting)}
+              >
+                <div className="meeting-time">{meeting.startTime} - {meeting.endTime}</div>
+                <div className="meeting-title">{meeting.title}</div>
+              </div>
+            ))}
+          </div>
+        );
+      }
+
       week.push(
-        <div key={`day-${i}`} className={`weekly-day ${isToday ? 'today' : ''}`}>
+        <div 
+          key={`day-${i}`} 
+          className={`weekly-day ${isToday ? 'today' : ''}`}
+        >
           <div className="weekly-day-header">
             <div className="weekly-day-name">{['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][i]}</div>
             <div className="weekly-day-number">{currentDay.getDate()}</div>
           </div>
           <div className="weekly-meetings">
-            {dayMeetings.length === 0 ? (
-              <div className="no-meetings">No meetings</div>
-            ) : (
-              dayMeetings.map(meeting => (
-                <div 
-                  key={meeting.id} 
-                  className="meeting-item weekly-meeting-item"
-                  onClick={() => handleMeetingClick(meeting)}
-                >
-                  <div className="meeting-time">{meeting.startTime} - {meeting.endTime}</div>
-                  <div className="meeting-title">{meeting.title}</div>
-                </div>
-              ))
-            )}
+            {hourlySlots}
           </div>
         </div>
       );
@@ -477,6 +586,171 @@ function Calendar({ userId }: CalendarProps) {
     }
   };
 
+  const handleTaskTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setTaskTabValue(newValue);
+  };
+
+  const getTaskStatusDetails = (status: number) => {
+    switch (status) {
+      case 0:
+        return { label: 'To Do', color: '#0288d1', icon: <ScheduleIcon fontSize="small" /> };
+      case 1:
+        return { label: 'In Progress', color: '#9c27b0', icon: <HourglassTopIcon fontSize="small" /> };
+      case 2:
+        return { label: 'Completed', color: '#2e7d32', icon: <CheckCircleIcon fontSize="small" /> };
+      case 3:
+        return { label: 'Dropped', color: '#757575', icon: <CancelIcon fontSize="small" /> };
+      default:
+        return { label: 'Unknown', color: '#757575', icon: <ScheduleIcon fontSize="small" /> };
+    }
+  };
+
+  const getTaskPriorityDetails = (priority: number) => {
+    switch (priority) {
+      case 0:
+        return { label: 'High', color: '#d32f2f', icon: <PriorityHighIcon fontSize="small" /> };
+      case 1:
+        return { label: 'Medium', color: '#ed6c02', icon: <FlagIcon fontSize="small" /> };
+      case 2:
+        return { label: 'Low', color: '#2e7d32', icon: <LowPriorityIcon fontSize="small" /> };
+      default:
+        return { label: 'Unknown', color: '#757575', icon: <FlagIcon fontSize="small" /> };
+    }
+  };
+
+  const filteredTasksByStatus = (status: number) => {
+    return tasks.filter(task => 
+      task.status === status && 
+      (task.title.toLowerCase().includes(taskSearchQuery.toLowerCase()) || 
+       task.description.toLowerCase().includes(taskSearchQuery.toLowerCase()) ||
+       task.project_name.toLowerCase().includes(taskSearchQuery.toLowerCase()))
+    );
+  };
+
+  const isTaskSelected = (taskId: number) => {
+    return selectedTasks.some(task => task.id === taskId);
+  };
+
+  const handleAddTaskToMeeting = (task: Task) => {
+    if (isTaskSelected(task.id)) {
+      setSelectedTasks(selectedTasks.filter(t => t.id !== task.id));
+    } else {
+      setSelectedTasks([...selectedTasks, task]);
+    }
+  };
+
+  const renderTaskSelector = () => {
+    return (
+      <Box sx={{ width: '100%', mt: 2 }}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+          <TextField
+            fullWidth
+            size="small"
+            placeholder="Search tasks..."
+            value={taskSearchQuery}
+            onChange={(e) => setTaskSearchQuery(e.target.value)}
+            sx={{ mb: 2 }}
+            InputProps={{
+              startAdornment: <SearchIcon fontSize="small" sx={{ color: 'text.secondary', mr: 1 }} />
+            }}
+          />
+          <Tabs value={taskTabValue} onChange={handleTaskTabChange} aria-label="task status tabs">
+            <Tab 
+              label="To Do" 
+              icon={<ScheduleIcon fontSize="small" />} 
+              iconPosition="start"
+              sx={{ minHeight: '48px', textTransform: 'none' }}
+            />
+            <Tab 
+              label="In Progress" 
+              icon={<HourglassTopIcon fontSize="small" />} 
+              iconPosition="start"
+              sx={{ minHeight: '48px', textTransform: 'none' }}
+            />
+          </Tabs>
+        </Box>
+        
+        {taskTabValue === 0 && (
+          <TaskList 
+            tasks={filteredTasksByStatus(0)} 
+            onTaskClick={handleAddTaskToMeeting}
+            selectedTaskIds={selectedTasks.map(t => t.id)}
+          />
+        )}
+        
+        {taskTabValue === 1 && (
+          <TaskList 
+            tasks={filteredTasksByStatus(1)} 
+            onTaskClick={handleAddTaskToMeeting}
+            selectedTaskIds={selectedTasks.map(t => t.id)}
+          />
+        )}
+      </Box>
+    );
+  };
+
+  const renderSelectedTasks = () => {
+    if (selectedTasks.length === 0) {
+      return (
+        <Paper 
+          variant="outlined" 
+          sx={{ 
+            p: 2, 
+            mt: 2, 
+            backgroundColor: '#f5f5f5',
+            borderStyle: 'dashed',
+            textAlign: 'center',
+            color: 'text.secondary'
+          }}
+        >
+          <Typography variant="body2">No tasks linked to this meeting</Typography>
+        </Paper>
+      );
+    }
+    
+    return (
+      <Box sx={{ mt: 2 }}>
+        <Typography variant="subtitle2" gutterBottom>
+          Linked Tasks ({selectedTasks.length})
+        </Typography>
+        <Paper variant="outlined" sx={{ p: 1 }}>
+          <List dense disablePadding>
+            {selectedTasks.map(task => {
+              const priorityDetails = getTaskPriorityDetails(task.priority);
+              return (
+                <ListItem 
+                  key={task.id}
+                  secondaryAction={
+                    <Chip 
+                      label="Remove"
+                      size="small"
+                      color="default"
+                      onClick={() => setSelectedTasks(selectedTasks.filter(t => t.id !== task.id))}
+                      sx={{ cursor: 'pointer' }}
+                    />
+                  }
+                  sx={{ 
+                    borderLeft: `4px solid ${priorityDetails.color}`,
+                    mb: 1,
+                    backgroundColor: 'white',
+                    borderRadius: 1,
+                  }}
+                >
+                  <ListItemText 
+                    primary={task.title}
+                    secondary={task.project_name}
+                    primaryTypographyProps={{ fontWeight: 'medium' }}
+                    secondaryTypographyProps={{ fontSize: '0.75rem' }}
+                  />
+                </ListItem>
+              );
+            })}
+          </List>
+        </Paper>
+      </Box>
+    );
+  };
+
   return (
     <div className="calendar-container">
       <div className="calendar-header">
@@ -599,6 +873,14 @@ function Calendar({ userId }: CalendarProps) {
                   placeholder="Meeting details (optional)"
                 ></textarea>
               </div>
+              
+              {/* Task selection */}
+              <div className="form-group task-selection-container">
+                <label>Link Tasks</label>
+                {renderTaskSelector()}
+                {renderSelectedTasks()}
+              </div>
+              
               <div className="form-actions">
                 <button type="button" onClick={() => setShowAddMeeting(false)}>Cancel</button>
                 <button type="submit">Save Meeting</button>
@@ -642,6 +924,107 @@ function Calendar({ userId }: CalendarProps) {
         </div>
       )}
     </div>
+  );
+}
+
+// Helper function to get priority color
+function getPriorityColor(priority: number): string {
+  switch (priority) {
+    case 0: return '#d32f2f'; // High - red
+    case 1: return '#ed6c02'; // Medium - orange
+    case 2: return '#2e7d32'; // Low - green
+    default: return '#757575'; // Default - gray
+  }
+}
+
+// TaskList component for showing tasks
+interface TaskListProps {
+  tasks: Task[];
+  onTaskClick: (task: Task) => void;
+  selectedTaskIds: number[];
+}
+
+function TaskList({ tasks, onTaskClick, selectedTaskIds }: TaskListProps) {
+  if (tasks.length === 0) {
+    return (
+      <Box sx={{ py: 4, textAlign: 'center' }}>
+        <Typography color="text.secondary" variant="body2">
+          No tasks found
+        </Typography>
+      </Box>
+    );
+  }
+  
+  // Group tasks by project
+  const tasksByProject: { [key: string]: Task[] } = {};
+  tasks.forEach(task => {
+    if (!tasksByProject[task.project_name]) {
+      tasksByProject[task.project_name] = [];
+    }
+    tasksByProject[task.project_name].push(task);
+  });
+  
+  return (
+    <Box sx={{ maxHeight: '300px', overflow: 'auto' }}>
+      {Object.entries(tasksByProject).map(([projectName, projectTasks]) => (
+        <Box key={projectName} sx={{ mb: 2 }}>
+          <Typography 
+            variant="subtitle2" 
+            sx={{ 
+              bgcolor: '#f5f5f5', 
+              py: 0.5, 
+              px: 1, 
+              borderRadius: 1,
+              mb: 1
+            }}
+          >
+            {projectName}
+          </Typography>
+          
+          <List dense disablePadding>
+            {projectTasks.map(task => {
+              const isSelected = selectedTaskIds.includes(task.id);
+              const priorityDetails = getPriorityColor(task.priority);
+              
+              return (
+                <ListItem 
+                  key={task.id}
+                  sx={{ 
+                    cursor: 'pointer',
+                    borderLeft: `4px solid ${priorityDetails}`,
+                    borderRadius: 1,
+                    mb: 0.5,
+                    backgroundColor: isSelected ? 'rgba(25, 118, 210, 0.08)' : 'white',
+                    '&:hover': {
+                      backgroundColor: isSelected ? 'rgba(25, 118, 210, 0.12)' : 'rgba(0, 0, 0, 0.04)'
+                    },
+                    transition: 'background-color 0.2s'
+                  }}
+                  onClick={() => onTaskClick(task)}
+                >
+                  <ListItemText 
+                    primary={
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        {task.title}
+                        {isSelected && (
+                          <CheckCircleIcon 
+                            fontSize="small" 
+                            color="primary" 
+                            sx={{ ml: 1 }}
+                          />
+                        )}
+                      </Box>
+                    }
+                    secondary={task.description.substring(0, 60) + (task.description.length > 60 ? '...' : '')}
+                    primaryTypographyProps={{ fontWeight: isSelected ? 'bold' : 'medium' }}
+                  />
+                </ListItem>
+              );
+            })}
+          </List>
+        </Box>
+      ))}
+    </Box>
   );
 }
 
