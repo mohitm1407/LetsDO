@@ -1,5 +1,6 @@
 import { 
   Box, 
+  Button,
   Card, 
   Chip, 
   Container, 
@@ -29,9 +30,11 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import LowPriorityIcon from '@mui/icons-material/LowPriority';
 import FlagIcon from '@mui/icons-material/Flag';
 import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
+import AddIcon from '@mui/icons-material/Add';
 import '../pages/home.css';
 import Sidebar from '../components/Sidebar';
 import EditTaskModal from '../components/EditTaskModal';
+import AddTaskModal from '../components/AddTaskModal';
 
 // Styled components for custom UI elements
 const StyledTaskCard = styled(Card)(({ theme }) => ({
@@ -96,6 +99,7 @@ function TasksPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [addModalOpen, setAddModalOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -189,13 +193,36 @@ function TasksPage() {
           }}
         >
           <Container maxWidth="xl">
-            <Box sx={{ mb: 4 }}>
-              <Typography variant="h4" component="h1" fontWeight="bold" sx={{ mb: 1 }}>
-                My Tasks
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                Manage and track all your tasks in one place
-              </Typography>
+            <Box sx={{ 
+              mb: 4,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center' 
+            }}>
+              <div>
+                <Typography variant="h4" component="h1" fontWeight="bold" sx={{ mb: 1 }}>
+                  My Tasks
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                  Manage and track all your tasks in one place
+                </Typography>
+              </div>
+              <Button 
+                variant="contained" 
+                startIcon={<AddIcon />}
+                onClick={() => setAddModalOpen(true)}
+                sx={{ 
+                  borderRadius: 2,
+                  px: 3,
+                  py: 1,
+                  backgroundColor: '#1976d2',
+                  '&:hover': {
+                    backgroundColor: '#1565c0'
+                  }
+                }}
+              >
+                Add Task
+              </Button>
             </Box>
 
             {/* Search and filter section */}
@@ -341,9 +368,6 @@ function TasksPage() {
                               color: '#1976d2',
                             }}
                           />
-                          {/* <Typography variant="caption" color="text.secondary">
-                            Created {formatDate(task.created_at)}
-                          </Typography> */}
                         </Box>
                       </StyledTaskCard>
                     </Grid>
@@ -358,6 +382,13 @@ function TasksPage() {
               onClose={() => setEditModalOpen(false)}
               task={selectedTask}
               onTaskUpdated={fetchTasks}
+            />
+            
+            {/* Add Task Modal */}
+            <AddTaskModal
+              open={addModalOpen}
+              onClose={() => setAddModalOpen(false)}
+              onTaskAdded={fetchTasks}
             />
           </Container>
         </Box>

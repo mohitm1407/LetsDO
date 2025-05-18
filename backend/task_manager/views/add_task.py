@@ -31,8 +31,6 @@ class AddTaskView(APIView):
         except Project.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        print(request.data)
-
         try:
             task_data = AddTaskSchema(**request.data)
         except ValidationError as e:

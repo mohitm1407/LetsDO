@@ -12,7 +12,7 @@ class MeetingSchema(BaseModel):
     # Annotate as datetime but parse from ISO string
     start_time: str
     end_time: str
-    tasks: List[int] = Field(default_factory=list)
+    tasks: List[dict] = Field(default_factory=dict)
     
     class Config:
         # Configure JSON schema to handle datetime conversion
@@ -45,7 +45,7 @@ class Meeting(models.Model):
             description=self.description,
             start_time=self.start_time.isoformat(),
             end_time=self.end_time.isoformat(),
-            tasks=[task.pk for task in self.tasks.all()],
+            tasks=[task.serialize().model_dump() for task in self.tasks.all()],
         )
 
     @classmethod
@@ -65,3 +65,14 @@ class Meeting(models.Model):
     @classmethod
     def get_meeting(cls, meeting_id: int) -> "Meeting":
         return cls.objects.get(id=meeting_id)
+
+    def link_tasks(self , task_ids: list[int]) -> None:
+        try:
+            tasks = list(ProjectTask.objects.filter(id__in=task_ids))
+            self.tasks.clear()
+            self.tasks.add(*tasks)
+            self.save()
+        except Exception as e:
+            print(e)
+            raise e
+

@@ -25,6 +25,9 @@ import FlagIcon from '@mui/icons-material/Flag';
 import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
+import InfoIcon from '@mui/icons-material/Info';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import LinkTasksForm from './LinkTasksForm';
 
 interface Task {
   id: number;
@@ -60,10 +63,12 @@ function Calendar({ userId, onDrop }: CalendarProps) {
   const [showAddMeeting, setShowAddMeeting] = useState(false);
   const [showMeetingDetails, setShowMeetingDetails] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
-  const [calendarView, setCalendarView] = useState<CalendarView>('month');
+  const [calendarView, setCalendarView] = useState<CalendarView>('week');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [taskSearchQuery, setTaskSearchQuery] = useState('');
-  const [taskTabValue, setTaskTabValue] = useState(0); // 0: Todo, 1: In Progress
+  const [taskTabValue, setTaskTabValue] = useState(0); // 0: Todo, 1: In Progress, 2: Completed
+  const [showLinkTasks, setShowLinkTasks] = useState(false);
+  const [meetingDetailTab, setMeetingDetailTab] = useState(0); // 0: Details, 1: Tasks
   
   // Initialize with today's date
   const today = new Date().toISOString().split('T')[0];
@@ -89,9 +94,8 @@ function Calendar({ userId, onDrop }: CalendarProps) {
       const response = await axios.get(`http://0.0.0.0:8001/tasks/${userId}`);
       const taskList = response.data.task_list || [];
       
-      // Filter out completed and dropped tasks
-      const activeTasks = taskList.filter((task: Task) => task.status !== 2 && task.status !== 3);
-      setTasks(activeTasks);
+      // Don't filter out completed and dropped tasks anymore
+      setTasks(taskList);
     } catch (error) {
       console.error('Error fetching tasks:', error);
     }
@@ -667,6 +671,12 @@ function Calendar({ userId, onDrop }: CalendarProps) {
               iconPosition="start"
               sx={{ minHeight: '48px', textTransform: 'none' }}
             />
+            <Tab 
+              label="Completed" 
+              icon={<CheckCircleIcon fontSize="small" />} 
+              iconPosition="start"
+              sx={{ minHeight: '48px', textTransform: 'none' }}
+            />
           </Tabs>
         </Box>
         
@@ -681,6 +691,14 @@ function Calendar({ userId, onDrop }: CalendarProps) {
         {taskTabValue === 1 && (
           <TaskList 
             tasks={filteredTasksByStatus(1)} 
+            onTaskClick={handleAddTaskToMeeting}
+            selectedTaskIds={selectedTasks.map(t => t.id)}
+          />
+        )}
+        
+        {taskTabValue === 2 && (
+          <TaskList 
+            tasks={filteredTasksByStatus(2)} 
             onTaskClick={handleAddTaskToMeeting}
             selectedTaskIds={selectedTasks.map(t => t.id)}
           />
@@ -749,6 +767,16 @@ function Calendar({ userId, onDrop }: CalendarProps) {
         </Paper>
       </Box>
     );
+  };
+
+  const handleLinkTasksSuccess = () => {
+    // Don't close the modal, just refresh meeting data and switch back to details tab
+    fetchMeetings();
+  };
+
+  // Add a handler for meeting detail tab changes
+  const handleMeetingDetailTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setMeetingDetailTab(newValue);
   };
 
   return (
@@ -893,33 +921,63 @@ function Calendar({ userId, onDrop }: CalendarProps) {
       {showMeetingDetails && selectedMeeting && (
         <div className="modal-overlay" onClick={() => setShowMeetingDetails(false)}>
           <div className="meeting-details-modal" onClick={(e) => e.stopPropagation()}>
-            <h3>{selectedMeeting.title}</h3>
-            
-            <div className="meeting-detail-item">
-              <i className="fas fa-calendar-day detail-icon"></i>
-              <span>{formatDate(selectedMeeting.date)}</span>
+            <div className="modal-header">
+              <h3>{selectedMeeting.title}</h3>
+              <button className="close-icon" onClick={() => setShowMeetingDetails(false)}>
+                <i className="fas fa-times"></i>
+              </button>
             </div>
             
-            <div className="meeting-detail-item">
-              <i className="fas fa-clock detail-icon"></i>
-              <span>{selectedMeeting.startTime} - {selectedMeeting.endTime}</span>
+            <div className="meeting-tabs">
+              <Tabs 
+                value={meetingDetailTab} 
+                onChange={handleMeetingDetailTabChange}
+                variant="fullWidth"
+                className="meeting-detail-tabs"
+              >
+                <Tab icon={<InfoIcon />} label="Details" />
+                <Tab icon={<AssignmentIcon />} label="Tasks" />
+              </Tabs>
             </div>
             
-            {selectedMeeting.description && (
-              <div className="meeting-description-box">
-                <h4>Description</h4>
-                <p>{selectedMeeting.description}</p>
+            {meetingDetailTab === 0 && (
+              <div className="meeting-details-content">
+                <div className="meeting-detail-item">
+                  <i className="fas fa-calendar-day detail-icon"></i>
+                  <span>{formatDate(selectedMeeting.date)}</span>
+                </div>
+                
+                <div className="meeting-detail-item">
+                  <i className="fas fa-clock detail-icon"></i>
+                  <span>{selectedMeeting.startTime} - {selectedMeeting.endTime}</span>
+                </div>
+                
+                {selectedMeeting.description && (
+                  <div className="meeting-description-box">
+                    <h4>Description</h4>
+                    <p>{selectedMeeting.description}</p>
+                  </div>
+                )}
+                
+                <div className="meeting-actions">
+                  <button className="take-notes-btn" onClick={navigateToNotes}>
+                    <i className="fas fa-edit mr-2"></i> Take Notes
+                  </button>
+                  <button className="close-btn" onClick={() => setShowMeetingDetails(false)}>
+                    Close
+                  </button>
+                </div>
               </div>
             )}
             
-            <div className="meeting-actions">
-              <button className="take-notes-btn" onClick={navigateToNotes}>
-                <i className="fas fa-edit mr-2"></i> Take Notes
-              </button>
-              <button className="close-btn" onClick={() => setShowMeetingDetails(false)}>
-                Close
-              </button>
-            </div>
+            {meetingDetailTab === 1 && (
+              <div className="meeting-tasks-content">
+                <LinkTasksForm 
+                  meetingId={selectedMeeting.id} 
+                  onTasksLinked={handleLinkTasksSuccess} 
+                />
+              </div>
+            )}
           </div>
         </div>
       )}

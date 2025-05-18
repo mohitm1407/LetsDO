@@ -6,6 +6,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import axios from 'axios';
 import './MeetingNotes.css';
+import LinkedTasksList from '../components/LinkedTasksList';
 
 interface Meeting {
   id: number;
@@ -424,6 +425,9 @@ function MeetingNotes() {
           <p>{meeting.description}</p>
         </div>
       )}
+      
+      {/* Linked Tasks Section */}
+      {meetingId && <LinkedTasksList meetingId={parseInt(meetingId)} />}
       
       <div className="notes-tools">
         <div className="format-tools">
