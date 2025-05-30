@@ -1,0 +1,25 @@
+{
+  "python.linting.flake8Enabled": true,
+  "python.linting.enabled": true,
+  "python.formatting.autopep8Path": "autopep8",
+  "python.formatting.provider": "black",
+  "python.formatting.blackArgs": ["--line-length=150"],
+  "python.languageServer": "Pylance",
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportOptionalMemberAccess": "none",
+    "reportUnboundVariable": "none"
+  },
+  "python.analysis.inlayHints.functionReturnTypes": true,
+  "python.analysis.inlayHints.variableTypes": false,
+  "cSpell.words": ["dicoms", "qsync", "usecase"],
+  "yaml.schemas": {
+    "https://json.schemastore.org/yamllint.json": "untitled:Untitled-1"
+  },
+  "python.analysis.fixAll": ["source.unusedImports"],
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  },
+  "editor.formatOnSave": true,
+  "explorer.autoReveal": "focusNoScroll"
+}

@@ -5,8 +5,9 @@ import { Avatar, Box, Button, Container, Divider, Paper, TextField, Typography }
 import IconButton from '@mui/material/IconButton'
 import InputAdornment from '@mui/material/InputAdornment'
 import axios from 'axios'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
 interface InputData{
   username: string;
@@ -22,6 +23,14 @@ function Login () {
   const [error, setError] = useState('')
   const [isLogin, setIsLogin] = useState(true)
   const navigate = useNavigate()
+  const { login, user } = useAuth()
+
+  useEffect(() => {
+    // If user is already logged in, redirect to home
+    if (user) {
+      navigate('/home');
+    }
+  }, [user, navigate]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const name = event.target.name
@@ -65,10 +74,11 @@ function Login () {
       .then(response => {
         console.log(response);
         setError('');
-        localStorage.setItem('user', JSON.stringify({
+        const userData = {
           id: response.data.user_id,
           username: input['username']
-        }));
+        };
+        login(userData);
         navigate('/home');
       })
       .catch(error => {

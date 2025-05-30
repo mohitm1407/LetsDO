@@ -63,7 +63,7 @@ function Sidebar({ className = '' }: SidebarProps) {
           <i className="fas fa-calendar"></i>
           {!isMinimized && <span>Calendar</span>}
         </li>
-        <li 
+        {/* <li 
           className={`nav-item ${isActive('/analytics') ? 'active' : ''}`}
           onClick={() => handleNavigation('/analytics')}
         >
@@ -76,7 +76,7 @@ function Sidebar({ className = '' }: SidebarProps) {
         >
           <i className="fas fa-cog"></i>
           {!isMinimized && <span>Settings</span>}
-        </li>
+        </li> */}
       </ul>
     </nav>
   );

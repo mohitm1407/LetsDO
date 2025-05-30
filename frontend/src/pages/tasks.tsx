@@ -178,6 +178,24 @@ function TasksPage() {
     setEditModalOpen(true);
   };
 
+  // Group tasks by status and sort by creation date
+  const groupedTasks = filteredTasks.reduce((acc, task) => {
+    const statusLabel = getStatusDetails(task.status).label;
+    if (!acc[statusLabel]) {
+      acc[statusLabel] = [];
+    }
+    acc[statusLabel].push(task);
+    return acc;
+  }, {} as Record<string, Task[]>);
+
+  // Sort tasks within each status group by creation date
+  Object.keys(groupedTasks).forEach(status => {
+    groupedTasks[status].sort((a, b) => b.id - a.id);
+  });
+
+  // Define the order of status groups
+  const statusOrder = ['To Do', 'In Progress', 'Completed', 'Dropped'];
+
   return (
     <div className="layout">
       <Sidebar />
@@ -276,7 +294,7 @@ function TasksPage() {
               </FormControl>
             </Box>
 
-            {/* Tasks grid/list */}
+            {/* Tasks display by status */}
             {loading ? (
               <Box sx={{ textAlign: 'center', py: 4 }}>
                 <Typography>Loading tasks...</Typography>
@@ -303,77 +321,93 @@ function TasksPage() {
                 </Typography>
               </Box>
             ) : (
-              <Grid container spacing={3}>
-                {filteredTasks.map(task => {
-                  const priorityDetails = getPriorityDetails(task.priority);
-                  const statusDetails = getStatusDetails(task.status);
-                  
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {statusOrder.map(status => {
+                  const tasks = groupedTasks[status] || [];
+                  if (tasks.length === 0) return null;
+
                   return (
-                    <Grid item xs={12} md={6} lg={4} key={task.id}>
-                      <StyledTaskCard onClick={() => handleTaskClick(task)}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                          <Typography 
-                            variant="subtitle1" 
-                            sx={{ fontWeight: 'bold', mb: 0.5 }}
-                          >
-                            {task.title}
-                          </Typography>
+                    <Box key={status}>
+                      <Typography 
+                        variant="h6" 
+                        sx={{ 
+                          mb: 2, 
+                          color: getStatusDetails(
+                            statusOrder.indexOf(status)
+                          ).color,
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        {status} ({tasks.length})
+                      </Typography>
+                      <Grid container spacing={3}>
+                        {tasks.map(task => {
+                          const priorityDetails = getPriorityDetails(task.priority);
+                          const statusDetails = getStatusDetails(task.status);
                           
-                          <Box>
-                            <Chip 
-                              size="small" 
-                              label={priorityDetails.label}
-                              icon={priorityDetails.icon}
-                              sx={{ 
-                                backgroundColor: `${priorityDetails.color}15`,
-                                color: priorityDetails.color,
-                                fontWeight: 'bold',
-                                mr: 1
-                              }}
-                            />
-                            <Chip 
-                              size="small" 
-                              label={statusDetails.label}
-                              icon={statusDetails.icon}
-                              sx={{ 
-                                backgroundColor: `${statusDetails.color}15`,
-                                color: statusDetails.color,
-                                fontWeight: 'bold'
-                              }}
-                            />
-                          </Box>
-                        </Box>
-                        
-                        <Typography 
-                          variant="body2" 
-                          color="text.secondary"
-                          sx={{ 
-                            mb: 2,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            display: '-webkit-box',
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical',
-                          }}
-                        >
-                          {task.description}
-                        </Typography>
-                        
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <Chip 
-                            size="small" 
-                            label={task.project_name}
-                            sx={{ 
-                              backgroundColor: '#e3f2fd',
-                              color: '#1976d2',
-                            }}
-                          />
-                        </Box>
-                      </StyledTaskCard>
-                    </Grid>
+                          return (
+                            <Grid item xs={12} md={6} lg={4} key={task.id}>
+                              <StyledTaskCard onClick={() => handleTaskClick(task)}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                                  <Typography 
+                                    variant="subtitle1" 
+                                    sx={{ fontWeight: 'bold', mb: 0.5 }}
+                                  >
+                                    {task.title}
+                                  </Typography>
+                                  
+                                  <Box>
+                                    <Chip 
+                                      size="small" 
+                                      label={priorityDetails.label}
+                                      icon={priorityDetails.icon}
+                                      sx={{ 
+                                        backgroundColor: `${priorityDetails.color}15`,
+                                        color: priorityDetails.color,
+                                        fontWeight: 'bold',
+                                        mr: 1
+                                      }}
+                                    />
+                                  </Box>
+                                </Box>
+                                
+                                <Typography 
+                                  variant="body2" 
+                                  color="text.secondary"
+                                  sx={{ 
+                                    mb: 2,
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: 'vertical',
+                                  }}
+                                >
+                                  {task.description}
+                                </Typography>
+                                
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <Chip 
+                                    size="small" 
+                                    label={task.project_name}
+                                    sx={{ 
+                                      backgroundColor: '#e3f2fd',
+                                      color: '#1976d2',
+                                    }}
+                                  />
+                                  {/* <Typography variant="caption" color="text.secondary">
+                                    {formatDate(task.created_at)}
+                                  </Typography> */}
+                                </Box>
+                              </StyledTaskCard>
+                            </Grid>
+                          );
+                        })}
+                      </Grid>
+                    </Box>
                   );
                 })}
-              </Grid>
+              </Box>
             )}
 
             {/* Edit Task Modal */}
