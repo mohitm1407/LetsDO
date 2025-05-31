@@ -1,40 +1,42 @@
-import { 
-  Box, 
+import '@fortawesome/fontawesome-free/css/all.min.css';
+import AddIcon from '@mui/icons-material/Add';
+import CancelIcon from '@mui/icons-material/Cancel';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import FlagIcon from '@mui/icons-material/Flag';
+import HourglassTopIcon from '@mui/icons-material/HourglassTop';
+import LowPriorityIcon from '@mui/icons-material/LowPriority';
+import NoteIcon from '@mui/icons-material/Note';
+import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
+import ScheduleIcon from '@mui/icons-material/Schedule';
+import SearchIcon from '@mui/icons-material/Search';
+import {
+  Box,
   Button,
-  Card, 
-  Chip, 
-  Container, 
-  Divider, 
-  FormControl, 
-  Grid, 
-  IconButton, 
-  InputAdornment, 
-  InputLabel, 
-  MenuItem, 
-  Select, 
-  TextField, 
-  Typography 
+  Card,
+  Chip,
+  Container,
+  Divider,
+  FormControl,
+  Grid,
+  IconButton,
+  InputAdornment,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField,
+  Tooltip,
+  Typography
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
 import { styled } from '@mui/material/styles';
-import '@fortawesome/fontawesome-free/css/all.min.css';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import SearchIcon from '@mui/icons-material/Search';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ScheduleIcon from '@mui/icons-material/Schedule';
-import HourglassTopIcon from '@mui/icons-material/HourglassTop';
-import CancelIcon from '@mui/icons-material/Cancel';
-import LowPriorityIcon from '@mui/icons-material/LowPriority';
-import FlagIcon from '@mui/icons-material/Flag';
-import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
-import AddIcon from '@mui/icons-material/Add';
-import '../pages/home.css';
-import Sidebar from '../components/Sidebar';
-import EditTaskModal from '../components/EditTaskModal';
 import AddTaskModal from '../components/AddTaskModal';
+import EditTaskModal from '../components/EditTaskModal';
+import Sidebar from '../components/Sidebar';
+import '../pages/home.css';
 
 // Styled components for custom UI elements
 const StyledTaskCard = styled(Card)(({ theme }) => ({
@@ -176,6 +178,11 @@ function TasksPage() {
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
     setEditModalOpen(true);
+  };
+
+  const handleOpenNotes = (taskId: number, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent task card click event
+    navigate(`/task-notes/${taskId}`);
   };
 
   // Group tasks by status and sort by creation date
@@ -356,7 +363,21 @@ function TasksPage() {
                                     {task.title}
                                   </Typography>
                                   
-                                  <Box>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Tooltip title="Open Notes">
+                                      <IconButton 
+                                        size="small"
+                                        onClick={(e) => handleOpenNotes(task.id, e)}
+                                        sx={{ 
+                                          color: '#1976d2',
+                                          '&:hover': {
+                                            backgroundColor: 'rgba(25, 118, 210, 0.08)'
+                                          }
+                                        }}
+                                      >
+                                        <NoteIcon fontSize="small" />
+                                      </IconButton>
+                                    </Tooltip>
                                     <Chip 
                                       size="small" 
                                       label={priorityDetails.label}
@@ -364,8 +385,7 @@ function TasksPage() {
                                       sx={{ 
                                         backgroundColor: `${priorityDetails.color}15`,
                                         color: priorityDetails.color,
-                                        fontWeight: 'bold',
-                                        mr: 1
+                                        fontWeight: 'bold'
                                       }}
                                     />
                                   </Box>

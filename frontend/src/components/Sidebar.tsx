@@ -44,7 +44,7 @@ function Sidebar({ className = '' }: SidebarProps) {
         </li>
         <li
           className={`nav-item ${isActive('/projects') ? 'active' : ''}`}
-          onClick={() => handleNavigation('/home')}
+          onClick={() => handleNavigation('/projects')}
         >
           <i className="fas fa-tasks"></i>
           {!isMinimized && <span>Projects</span>}

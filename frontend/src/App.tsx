@@ -3,9 +3,10 @@ import './App.css';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 import CalendarPage from './pages/calendar';
-import HomePage from './pages/home';
+import DashboardPage from './pages/dashboard';
 import Login from './pages/login';
 import MeetingNotes from './pages/MeetingNotes';
+import ProjectsPage from './pages/projects';
 import TaskNotes from './pages/TaskNotes';
 import TasksPage from './pages/tasks';
 
@@ -17,12 +18,17 @@ function App() {
           <Route path='/' element={<Login />} />
           <Route path='/home' element={
             <ProtectedRoute>
-              <HomePage />
+              <DashboardPage />
             </ProtectedRoute>
           } />
           <Route path='/calendar' element={
             <ProtectedRoute>
               <CalendarPage />
+            </ProtectedRoute>
+          } />
+          <Route path='/projects' element={
+            <ProtectedRoute>
+              <ProjectsPage />
             </ProtectedRoute>
           } />
           <Route path='/meeting-notes/:meetingId' element={
