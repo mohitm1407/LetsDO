@@ -7,21 +7,20 @@ import HourglassTopIcon from '@mui/icons-material/HourglassTop';
 import NoteIcon from '@mui/icons-material/Note';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import {
-    Box,
-    Button,
-    Card,
-    CardContent,
-    Chip,
-    Container,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    Grid,
-    IconButton,
-    TextField,
-    Tooltip,
-    Typography
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Grid,
+  IconButton,
+  TextField,
+  Tooltip,
+  Typography
 } from '@mui/material';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
@@ -30,12 +29,15 @@ import Sidebar from '../components/Sidebar';
 
 interface Project {
   id: number;
-  name: string;
+  display_name: string;
   description: string;
-  task_count: number;
-  completed_tasks: number;
-  in_progress_tasks: number;
-  todo_tasks: number;
+  tasks: {
+    id: number;
+    title: string;
+    description: string;
+    due_date: string;
+    status: string;
+  }[];
 }
 
 function ProjectsPage() {
@@ -47,8 +49,9 @@ function ProjectsPage() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [newProject, setNewProject] = useState({
-    name: '',
-    description: ''
+    display_name: '',
+    description: '',
+    tasks: []
   });
 
   useEffect(() => {
@@ -62,7 +65,7 @@ function ProjectsPage() {
       const userId = userData ? JSON.parse(userData).id : '1';
       
       const response = await axios.get(`http://0.0.0.0:8001/projects/${userId}`);
-      setProjects(response.data.projects || []);
+      setProjects(response.data.project_list || []);
       setError(null);
     } catch (err) {
       console.error('Error fetching projects:', err);
@@ -78,13 +81,13 @@ function ProjectsPage() {
       const userId = userData ? JSON.parse(userData).id : '1';
       
       await axios.post('http://0.0.0.0:8001/projects/', {
-        name: newProject.name,
+        display_name: newProject.display_name,
         description: newProject.description,
         user_id: userId
       });
       
       setAddModalOpen(false);
-      setNewProject({ name: '', description: '' });
+      setNewProject({ display_name: '', description: '', tasks: [] });
       fetchProjects();
     } catch (err) {
       console.error('Error adding project:', err);
@@ -97,7 +100,7 @@ function ProjectsPage() {
     
     try {
       await axios.put(`http://0.0.0.0:8001/projects/${selectedProject.id}`, {
-        name: selectedProject.name,
+        name: selectedProject.display_name,
         description: selectedProject.description
       });
       
@@ -224,7 +227,7 @@ function ProjectsPage() {
                       <CardContent>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                           <Typography variant="h6" component="h2" sx={{ fontWeight: 'bold' }}>
-                            {project.name}
+                            {project.display_name}
                           </Typography>
                           <Box>
                             <Tooltip title="Edit Project">
@@ -269,39 +272,10 @@ function ProjectsPage() {
                           {project.description}
                         </Typography>
 
-                        <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-                          <Chip
-                            size="small"
-                            label={`${project.completed_tasks} Completed`}
-                            icon={<CheckCircleIcon />}
-                            sx={{
-                              backgroundColor: '#e8f5e9',
-                              color: '#2e7d32'
-                            }}
-                          />
-                          <Chip
-                            size="small"
-                            label={`${project.in_progress_tasks} In Progress`}
-                            icon={<HourglassTopIcon />}
-                            sx={{
-                              backgroundColor: '#f3e5f5',
-                              color: '#9c27b0'
-                            }}
-                          />
-                          <Chip
-                            size="small"
-                            label={`${project.todo_tasks} To Do`}
-                            icon={<ScheduleIcon />}
-                            sx={{
-                              backgroundColor: '#e3f2fd',
-                              color: '#0288d1'
-                            }}
-                          />
-                        </Box>
 
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <Typography variant="body2" color="text.secondary">
-                            Total Tasks: {project.task_count}
+                            Total Tasks: {project.tasks.length}
                           </Typography>
                           <Tooltip title="View Project Details">
                             <IconButton 
@@ -334,8 +308,8 @@ function ProjectsPage() {
                   margin="dense"
                   label="Project Name"
                   fullWidth
-                  value={newProject.name}
-                  onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
+                  value={newProject.display_name}
+                  onChange={(e) => setNewProject({ ...newProject, display_name: e.target.value })}
                   sx={{ mb: 2 }}
                 />
                 <TextField
@@ -353,7 +327,7 @@ function ProjectsPage() {
                 <Button 
                   onClick={handleAddProject}
                   variant="contained"
-                  disabled={!newProject.name.trim()}
+                  disabled={!newProject.display_name.trim()}
                 >
                   Add Project
                 </Button>
@@ -369,7 +343,7 @@ function ProjectsPage() {
                   margin="dense"
                   label="Project Name"
                   fullWidth
-                  value={selectedProject?.name || ''}
+                  value={selectedProject?.display_name || ''}
                   onChange={(e) => setSelectedProject(prev => prev ? { ...prev, name: e.target.value } : null)}
                   sx={{ mb: 2 }}
                 />
@@ -388,7 +362,7 @@ function ProjectsPage() {
                 <Button 
                   onClick={handleEditProject}
                   variant="contained"
-                  disabled={!selectedProject?.name.trim()}
+                  disabled={!selectedProject?.display_name.trim()}
                 >
                   Save Changes
                 </Button>
