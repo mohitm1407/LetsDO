@@ -6,23 +6,19 @@ from task_manager.models.project_task import ProjectTask
 
 
 class MeetingSchema(BaseModel):
-    id: Optional[int] = None
+    id: int
     title: str
     description: str
     # Annotate as datetime but parse from ISO string
     start_time: str
     end_time: str
-    tasks: List[dict] = Field(default_factory=dict)
-    
+    tasks: List[dict] = Field(default_factory=list)
+
     class Config:
         # Configure JSON schema to handle datetime conversion
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
+        json_encoders = {datetime: lambda v: v.isoformat()}
         # Allow parsing of ISO strings to datetime objects
-        json_decoders = {
-            datetime: datetime.fromisoformat
-        }
+        json_decoders = {datetime: datetime.fromisoformat}
 
 
 class Meeting(models.Model):
@@ -49,16 +45,16 @@ class Meeting(models.Model):
         )
 
     @classmethod
-    def create_meeting(cls, meeting_details: MeetingSchema) -> "Meeting":
+    def create_meeting(cls, meeting_details: dict) -> "Meeting":
         meeting = cls(
-            title=meeting_details.title,
-            description=meeting_details.description,
-            start_time=datetime.fromisoformat(meeting_details.start_time),
-            end_time=datetime.fromisoformat(meeting_details.end_time),
+            title=meeting_details["title"],
+            description=meeting_details["description"],
+            start_time=datetime.fromisoformat(meeting_details["start_time"]),
+            end_time=datetime.fromisoformat(meeting_details["end_time"]),
         )
         meeting.save()
-        if meeting_details.tasks:
-            tasks = ProjectTask.objects.filter(id__in=meeting_details.tasks)
+        if meeting_details["tasks"]:
+            tasks = ProjectTask.objects.filter(id__in=meeting_details["tasks"])
             meeting.tasks.set(tasks)
         return meeting
 
@@ -66,7 +62,7 @@ class Meeting(models.Model):
     def get_meeting(cls, meeting_id: int) -> "Meeting":
         return cls.objects.get(id=meeting_id)
 
-    def link_tasks(self , task_ids: list[int]) -> None:
+    def link_tasks(self, task_ids: list[int]) -> None:
         try:
             tasks = list(ProjectTask.objects.filter(id__in=task_ids))
             self.tasks.clear()
@@ -75,4 +71,3 @@ class Meeting(models.Model):
         except Exception as e:
             print(e)
             raise e
-

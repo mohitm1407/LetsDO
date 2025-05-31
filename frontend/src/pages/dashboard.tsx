@@ -6,25 +6,25 @@ import NoteIcon from '@mui/icons-material/Note';
 import PriorityHighIcon from '@mui/icons-material/PriorityHigh';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import {
-    Box,
-    Card,
-    CardContent,
-    Chip,
-    Container,
-    Divider,
-    Grid,
-    IconButton,
-    List,
-    ListItem,
-    ListItemText,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Tooltip,
-    Typography
+  Box,
+  Card,
+  CardContent,
+  Chip,
+  Container,
+  Divider,
+  Grid,
+  IconButton,
+  List,
+  ListItem,
+  ListItemText,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Tooltip,
+  Typography
 } from '@mui/material';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
@@ -76,14 +76,22 @@ function Dashboard() {
 
       // Fetch upcoming meetings
       const meetingsResponse = await axios.get(`http://0.0.0.0:8001/meetings/`);
-      const meetings = meetingsResponse.data.map((meeting: any) => ({
-        id: meeting.id,
-        title: meeting.title,
-        date: meeting.start_time.split('T')[0],
-        startTime: meeting.start_time.split('T')[1].slice(0, 5),
-        endTime: meeting.end_time.split('T')[1].slice(0, 5),
-        description: meeting.description
-      }));
+      const currentDate = new Date();
+      const meetings = meetingsResponse.data
+        .map((meeting: any) => ({
+          id: meeting.id,
+          title: meeting.title,
+          date: meeting.start_time.split('T')[0],
+          startTime: meeting.start_time.split('T')[1].slice(0, 5),
+          endTime: meeting.end_time.split('T')[1].slice(0, 5),
+          description: meeting.description
+        }))
+        .filter((meeting: Meeting) => {
+          const meetingDate = new Date(meeting.date);
+          return meetingDate >= currentDate;
+        })
+        .sort((a: Meeting, b: Meeting) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      
       setUpcomingMeetings(meetings);
 
       // Fetch tasks
