@@ -80,8 +80,8 @@ function ProjectsPage() {
       const userData = localStorage.getItem('user');
       const userId = userData ? JSON.parse(userData).id : '1';
       
-      await axios.post('http://0.0.0.0:8001/projects/', {
-        display_name: newProject.display_name,
+      await axios.post('http://0.0.0.0:8001/projects/create/', {
+        title: newProject.display_name,
         description: newProject.description,
         user_id: userId
       });

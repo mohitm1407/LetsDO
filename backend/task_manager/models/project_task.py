@@ -121,8 +121,6 @@ class ProjectTask(models.Model):
             self.is_daily_task = task_data.get("is_daily_task", self.is_daily_task)
             self.deadline = task_data.get("deadline", self.deadline)
             self.project_id = task_data.get("project_id", self.project_id)
-            if ProjectTask.objects.filter(id=self.project_id, title=task_data.get("title")).exists():
-                raise Exception("Task already exists")
 
             self.project = Project.objects.get(id=self.project_id)
             self.save()
