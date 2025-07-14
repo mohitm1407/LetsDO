@@ -246,7 +246,7 @@ function TasksPage() {
                   }
                 }}
               >
-                Add Task
+                Add
               </Button>
             </Box>
 
