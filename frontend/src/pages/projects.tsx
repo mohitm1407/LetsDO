@@ -185,7 +185,7 @@ function ProjectsPage() {
                   }
                 }}
               >
-                Add Project
+                Add
               </Button>
             </Box>
 
