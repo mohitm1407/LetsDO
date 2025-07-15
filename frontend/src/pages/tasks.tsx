@@ -46,6 +46,8 @@ const StyledTaskCard = styled(Card)(({ theme }) => ({
   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
   transition: 'transform 0.2s ease, box-shadow 0.2s ease',
   cursor: 'pointer',
+  backgroundColor: 'rgba(255, 255, 255, 0.95)', // Semi-transparent background
+  backdropFilter: 'blur(10px)', // Glass effect
   '&:hover': {
     transform: 'translateY(-4px)',
     boxShadow: '0 10px 20px rgba(0, 0, 0, 0.1)',
@@ -210,7 +212,10 @@ function TasksPage() {
       <div className="main-wrapper">
         <Box
           sx={{
-            backgroundColor: '#f5f7fa',
+            background: 'linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundAttachment: 'fixed',
             pt: 2,
             pb: 4,
             height: '100%',
@@ -225,10 +230,10 @@ function TasksPage() {
               alignItems: 'center' 
             }}>
               <div>
-                <Typography variant="h4" component="h1" fontWeight="bold" sx={{ mb: 1 }}>
+                <Typography variant="h4" component="h1" fontWeight="bold" sx={{ mb: 1, color: 'white', textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>
                   My Tasks
                 </Typography>
-                <Typography variant="body1" color="text.secondary">
+                <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.9)', textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}>
                   Manage and track all your tasks in one place
                 </Typography>
               </div>
@@ -240,9 +245,10 @@ function TasksPage() {
                   borderRadius: 2,
                   px: 3,
                   py: 1,
-                  backgroundColor: '#1976d2',
+                  backgroundColor: 'rgba(25, 118, 210, 0.9)',
+                  backdropFilter: 'blur(10px)',
                   '&:hover': {
-                    backgroundColor: '#1565c0'
+                    backgroundColor: 'rgba(21, 101, 192, 0.9)'
                   }
                 }}
               >
@@ -265,7 +271,14 @@ function TasksPage() {
                 value={searchQuery}
                 onChange={handleSearchChange}
                 variant="outlined"
-                sx={{ flexGrow: 1, minWidth: 200 }}
+                sx={{ 
+                  flexGrow: 1, 
+                  minWidth: 200,
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    backdropFilter: 'blur(10px)',
+                  }
+                }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -275,7 +288,13 @@ function TasksPage() {
                 }}
               />
               
-              <FormControl sx={{ minWidth: 180 }}>
+              <FormControl sx={{ 
+                minWidth: 180,
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                  backdropFilter: 'blur(10px)',
+                }
+              }}>
                 <InputLabel id="task-filter-label">
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <FilterListIcon sx={{ mr: 1 }} /> Filter Tasks
@@ -303,11 +322,23 @@ function TasksPage() {
 
             {/* Tasks display by status */}
             {loading ? (
-              <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Box sx={{ 
+                textAlign: 'center', 
+                py: 4,
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                borderRadius: 2,
+                backdropFilter: 'blur(10px)'
+              }}>
                 <Typography>Loading tasks...</Typography>
               </Box>
             ) : error ? (
-              <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Box sx={{ 
+                textAlign: 'center', 
+                py: 4,
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                borderRadius: 2,
+                backdropFilter: 'blur(10px)'
+              }}>
                 <Typography color="error">{error}</Typography>
               </Box>
             ) : filteredTasks.length === 0 ? (
@@ -315,9 +346,10 @@ function TasksPage() {
                 sx={{ 
                   textAlign: 'center', 
                   py: 6,
-                  backgroundColor: 'white',
+                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
                   borderRadius: 2,
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
+                  backdropFilter: 'blur(10px)'
                 }}
               >
                 <Typography variant="h6" color="text.secondary" gutterBottom>
@@ -339,9 +371,8 @@ function TasksPage() {
                         variant="h6" 
                         sx={{ 
                           mb: 2, 
-                          color: getStatusDetails(
-                            statusOrder.indexOf(status)
-                          ).color,
+                          color: 'white',
+                          textShadow: '2px 2px 4px rgba(0,0,0,0.7)',
                           fontWeight: 'bold'
                         }}
                       >
