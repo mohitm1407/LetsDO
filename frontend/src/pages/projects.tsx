@@ -45,14 +45,8 @@ function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [addModalOpen, setAddModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [newProject, setNewProject] = useState({
-    display_name: '',
-    description: '',
-    tasks: []
-  });
 
   useEffect(() => {
     fetchProjects();
@@ -72,26 +66,6 @@ function ProjectsPage() {
       setError('Failed to load projects. Please try again later.');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleAddProject = async () => {
-    try {
-      const userData = localStorage.getItem('user');
-      const userId = userData ? JSON.parse(userData).id : '1';
-      
-      await axios.post('http://0.0.0.0:8001/projects/create/', {
-        title: newProject.display_name,
-        description: newProject.description,
-        user_id: userId
-      });
-      
-      setAddModalOpen(false);
-      setNewProject({ display_name: '', description: '', tasks: [] });
-      fetchProjects();
-    } catch (err) {
-      console.error('Error adding project:', err);
-      setError('Failed to add project. Please try again.');
     }
   };
 
@@ -171,22 +145,6 @@ function ProjectsPage() {
                   Manage your projects and track their progress
                 </Typography>
               </div>
-              <Button 
-                variant="contained" 
-                startIcon={<AddIcon />}
-                onClick={() => setAddModalOpen(true)}
-                sx={{ 
-                  borderRadius: 2,
-                  px: 3,
-                  py: 1,
-                  backgroundColor: '#1976d2',
-                  '&:hover': {
-                    backgroundColor: '#1565c0'
-                  }
-                }}
-              >
-                Add Project
-              </Button>
             </Box>
 
             {loading ? (
@@ -298,41 +256,6 @@ function ProjectsPage() {
                 ))}
               </Grid>
             )}
-
-            {/* Add Project Modal */}
-            <Dialog open={addModalOpen} onClose={() => setAddModalOpen(false)}>
-              <DialogTitle>Add New Project</DialogTitle>
-              <DialogContent>
-                <TextField
-                  autoFocus
-                  margin="dense"
-                  label="Project Name"
-                  fullWidth
-                  value={newProject.display_name}
-                  onChange={(e) => setNewProject({ ...newProject, display_name: e.target.value })}
-                  sx={{ mb: 2 }}
-                />
-                <TextField
-                  margin="dense"
-                  label="Description"
-                  fullWidth
-                  multiline
-                  rows={4}
-                  value={newProject.description}
-                  onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
-                />
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={() => setAddModalOpen(false)}>Cancel</Button>
-                <Button 
-                  onClick={handleAddProject}
-                  variant="contained"
-                  disabled={!newProject.display_name.trim()}
-                >
-                  Add Project
-                </Button>
-              </DialogActions>
-            </Dialog>
 
             {/* Edit Project Modal */}
             <Dialog open={editModalOpen} onClose={() => setEditModalOpen(false)}>
